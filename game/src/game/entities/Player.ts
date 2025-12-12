@@ -128,7 +128,7 @@ export class Player {
   }
 
   /**
-   * Apply item stats to player (called when item is picked up)
+   * Apply item stats to player (this shouldn't be called anymore, leaving this for reference)
    */
   equipItem(item: ItemData): void {
     this.attack += item.attack;
