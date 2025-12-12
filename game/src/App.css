@@ -1,0 +1,141 @@
+:root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d0d1a;
+  color: #ffffff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #16213e 100%);
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(26, 26, 46, 0.8);
+  border-bottom: 1px solid #4a4a6a;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #00ff88, #00aaff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #888;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.connect-prompt {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.prompt-content {
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #ffaa00;
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.prompt-content h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.prompt-content p {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.prompt-content .hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(26, 26, 46, 0.6);
+  border-top: 1px solid #4a4a6a;
+  font-size: 12px;
+}
+
+.footer a {
+  color: #6699ff;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer span {
+  color: #444;
+}
+
+.network-badge {
+  background: #ffaa00;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+/* Override dapp-kit button styles */
+button[class*="connect"] {
+  background: linear-gradient(90deg, #00ff88, #00aaff) !important;
+  border: none !important;
+  color: #000 !important;
+  font-weight: bold !important;
+}

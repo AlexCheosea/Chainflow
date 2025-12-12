@@ -1,0 +1,47 @@
+.wallet-connect {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(26, 26, 46, 0.9);
+  border-radius: 8px;
+  border: 1px solid #4a4a6a;
+}
+
+.wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connected-info,
+.disconnected-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.connected {
+  background: #00ff00;
+  box-shadow: 0 0 8px #00ff00;
+}
+
+.status-dot.disconnected {
+  background: #ff4444;
+}
+
+.address {
+  color: #00ff00;
+}
+
+.disconnected-info span {
+  color: #888;
+}
