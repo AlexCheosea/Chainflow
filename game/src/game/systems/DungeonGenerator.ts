@@ -245,4 +245,13 @@ export class DungeonGenerator {
   getFloor(): number {
     return this.floor;
   }
+  
+  getDimensions(): { width: number; height: number; pixelWidth: number; pixelHeight: number } {
+    return {
+      width: this.width,
+      height: this.height,
+      pixelWidth: this.width * 32,
+      pixelHeight: this.height * 32,
+    };
+  }
 }

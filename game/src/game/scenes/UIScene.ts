@@ -121,7 +121,8 @@ export class UIScene extends Phaser.Scene {
   }
 
   private onItemCollected(item: { name: string; rarity: string }): void {
-    if (!this.scene || !this.scene.isActive()) return;
+    // Check if scene is still active
+    if (!this.sys || !this.sys.isActive()) return;
     
     try {
       // Show brief item pickup notification

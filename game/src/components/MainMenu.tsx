@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useGameContext, getItemSlotType } from '../context/GameContext';
 import { WalletConnect } from './WalletConnect';
-import { EventBus } from '../game/EventBus';
+import { EventBus, GameState } from '../game/EventBus';
 import type { OwnedItem } from '../services/itemMinting';
 import './MainMenu.css';
 
@@ -42,7 +42,11 @@ export function MainMenu() {
   };
 
   const handlePlayGame = () => {
-    // Emit equipment bonuses to game BEFORE starting
+    // Store equipment bonuses in GameState for synchronous access by GameScene
+    console.log('[MainMenu] Setting equipment bonuses:', { attack: equipmentBonusAttack, defense: equipmentBonusDefense });
+    console.log('[MainMenu] Current equipment:', equipment);
+    GameState.initialEquipmentBonus = { attack: equipmentBonusAttack, defense: equipmentBonusDefense };
+    // Also emit event (in case scene is already listening)
     EventBus.emit('set-equipment-bonus', { attack: equipmentBonusAttack, defense: equipmentBonusDefense });
     setGameStarted(true);
   };

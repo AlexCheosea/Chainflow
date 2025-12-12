@@ -4,7 +4,7 @@ import { Enemy } from '../entities/Enemy';
 import { Item } from '../entities/Item';
 import type { ItemData } from '../entities/Item';
 import { DungeonGenerator } from '../systems/DungeonGenerator';
-import { EventBus } from '../EventBus';
+import { EventBus, GameState } from '../EventBus';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -29,35 +29,31 @@ export class GameScene extends Phaser.Scene {
   private attackCooldown: number = 0;
   private attackCooldownTime: number = 400; // ms between attacks
   private attackRange: number = 70; // Increased attack range
-  
-  // Equipment bonuses (set from main menu before game starts)
-  private equipmentBonusAttack: number = 0;
-  private equipmentBonusDefense: number = 0;
-  private equipmentBonusApplied: boolean = false;
 
   constructor() {
     super({ key: 'GameScene' });
   }
 
-  init(data?: { floor?: number; pendingItems?: ItemData[]; playerStats?: { attack: number; defense: number } }): void {
+  init(data?: { floor?: number; pendingItems?: ItemData[] }): void {
     // Initialize or continue floor
     this.currentFloor = data?.floor ?? 1;
     this.pendingItems = data?.pendingItems ?? [];
     this.dropsThisFloor = 0;
     this.gateSpawned = false;
     this.gate = null;
-    
-    // Only apply equipment bonus on first floor (game start)
-    this.equipmentBonusApplied = this.currentFloor > 1;
-    
-    // Listen for equipment bonus from main menu
-    EventBus.on('set-equipment-bonus', this.onSetEquipmentBonus, this);
   }
 
   create(): void {
     // Generate dungeon with floor scaling
     this.dungeon = new DungeonGenerator(this, 25, 19, this.currentFloor);
     this.dungeon.generate();
+    
+    // Set physics world bounds to match dungeon size
+    const dungeonSize = this.dungeon.getDimensions();
+    this.physics.world.setBounds(0, 0, dungeonSize.pixelWidth, dungeonSize.pixelHeight);
+    
+    // Also set camera bounds to match
+    this.cameras.main.setBounds(0, 0, dungeonSize.pixelWidth, dungeonSize.pixelHeight);
 
     // Create groups
     this.enemies = this.add.group();
@@ -67,11 +63,11 @@ export class GameScene extends Phaser.Scene {
     const spawn = this.dungeon.getSpawnPoint();
     this.player = new Player(this, spawn.x * 32 + 16, spawn.y * 32 + 16);
     
-    // Apply equipment bonuses from main menu (only once at game start)
-    if (!this.equipmentBonusApplied) {
-      this.player.setBaseStats(this.equipmentBonusAttack, this.equipmentBonusDefense);
-      this.equipmentBonusApplied = true;
-    }
+    // Apply stats from equipped inventory items (stored in GameState)
+    const bonuses = GameState.initialEquipmentBonus;
+    console.log('[GameScene] Applying equipment bonuses from GameState:', bonuses);
+    this.player.setBaseStats(bonuses.attack, bonuses.defense);
+    console.log('[GameScene] Player stats after setBaseStats:', { attack: this.player.attack, defense: this.player.defense });
 
     // Spawn enemies in rooms (scaled by floor)
     this.spawnEnemies();
@@ -124,29 +120,8 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(1.5);
     
-    // Emit initial player stats
-    EventBus.emit('player-stats-update', {
-      health: this.player.health,
-      maxHealth: this.player.maxHealth,
-      attack: this.player.attack,
-      defense: this.player.defense,
-      floor: this.currentFloor,
-    });
-  }
-  
-  private onSetEquipmentBonus(data: { attack: number; defense: number }): void {
-    // Only apply once at game start
-    if (this.equipmentBonusApplied) return;
-    
-    this.equipmentBonusAttack = data.attack;
-    this.equipmentBonusDefense = data.defense;
-    
-    // Apply to player if already created
-    if (this.player) {
-      this.player.setBaseStats(data.attack, data.defense);
-      this.equipmentBonusApplied = true;
-      
-      // Update UI
+    // Emit initial player stats after a short delay to ensure UIScene is ready
+    this.time.delayedCall(100, () => {
       EventBus.emit('player-stats-update', {
         health: this.player.health,
         maxHealth: this.player.maxHealth,
@@ -154,12 +129,7 @@ export class GameScene extends Phaser.Scene {
         defense: this.player.defense,
         floor: this.currentFloor,
       });
-    }
-  }
-  
-  shutdown(): void {
-    // Clean up EventBus listeners
-    EventBus.off('set-equipment-bonus', this.onSetEquipmentBonus, this);
+    });
   }
 
   update(): void {
@@ -421,14 +391,17 @@ export class GameScene extends Phaser.Scene {
     _playerSprite,
     itemSprite
   ) => {
+    // Null safety checks
+    if (!itemSprite || !(itemSprite as Phaser.Physics.Arcade.Sprite).active) return;
+    
     const item = (itemSprite as Phaser.Physics.Arcade.Sprite).getData('ref') as Item;
     if (!item) return;
     
     const itemData = item.getItemData();
+    if (!itemData) return;
     
-    // Add item stats directly to player (NOT equipItem - that's for permanent equipment)
-    this.player.attack += itemData.attack;
-    this.player.defense += itemData.defense;
+    // DO NOT add item stats to player - picked up items are only collected for minting
+    // Player stats come only from equipped inventory items
     
     // Add to pending items for minting on floor transition
     this.pendingItems.push(itemData);
@@ -454,17 +427,13 @@ export class GameScene extends Phaser.Scene {
   public proceedToNextFloor(): void {
     const nextFloor = this.currentFloor + 1;
     
-    // Store player stats to carry over
-    const playerStats = {
-      attack: this.player.attack,
-      defense: this.player.defense,
-    };
+    // Don't carry player stats - equipment bonuses will be re-applied from GameState
+    // This ensures stats stay consistent with equipped items, not accumulated pickups
     
     // Restart scene with next floor
     this.scene.restart({
       floor: nextFloor,
       pendingItems: [], // Clear pending items after minting
-      playerStats,
     });
   }
 
