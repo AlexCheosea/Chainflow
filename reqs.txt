@@ -1,0 +1,33 @@
+
+TODO - short story
+
+
+Game ----------
+Defeat enemies to gain items
+Items have different rarities, higher rarity has higher stats and it has a lower drop chance than common items
+Rarities:
+-common
+-uncommon
+-rare
+-legendary
+-chad
+-sui
+
+
+Marketplace ----------
+The store has a list of standard items (basic and uncommon) that you can buy to advance but some items can be found only by playing
+You can buy different new parts of the game : weapons, outfits (with stats), maps, campaigns(maybe you like the mechanics but you would like to see different stories)
+
+Each player should have a list of items that are set for selling.
+
+Items filter
+
+
+Pitch for future -----------
+
+chats for players to communicate
+
+
+contract2:
+items for sale
+each item has
