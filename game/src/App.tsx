@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { 
   SuiClientProvider, 
   WalletProvider, 
@@ -9,10 +9,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PhaserGame } from './components/PhaserGame';
 import { WalletConnect } from './components/WalletConnect';
 import { Inventory } from './components/Inventory';
-import { MintNotification } from './components/MintNotification';
+import { FloorTransitionModal } from './components/MintNotification';
 import { networkConfig, DEFAULT_NETWORK } from './config/sui';
 import { createMintItemTransaction } from './services/itemMinting';
 import type { ItemData } from './game/entities/Item';
+import { EventBus } from './game/EventBus';
 import '@mysten/dapp-kit/dist/index.css';
 import './App.css';
 
@@ -22,43 +23,89 @@ function GameApp() {
   const account = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   
-  const [mintingItem, setMintingItem] = useState<ItemData | null>(null);
-  const [mintStatus, setMintStatus] = useState<'pending' | 'success' | 'error' | null>(null);
-  const [txDigest, setTxDigest] = useState<string | undefined>();
+  // Floor transition state
+  const [showFloorTransition, setShowFloorTransition] = useState(false);
+  const [currentFloor, setCurrentFloor] = useState(1);
+  const [pendingItems, setPendingItems] = useState<ItemData[]>([]);
+  const [mintingStatus, setMintingStatus] = useState<'idle' | 'minting' | 'success' | 'error'>('idle');
+  const [mintProgress, setMintProgress] = useState({ current: 0, total: 0 });
+  
+  // Reference to the Phaser game for calling proceedToNextFloor
+  const gameRef = useRef<Phaser.Game | null>(null);
 
-  const handleItemPickup = useCallback(async (item: ItemData) => {
-    if (!account?.address) {
-      console.log('No wallet connected, item not minted:', item);
+  // Listen for floor transition events
+  useEffect(() => {
+    const handleFloorTransition = (data: { floor: number; pendingItems: ItemData[] }) => {
+      setCurrentFloor(data.floor);
+      setPendingItems(data.pendingItems);
+      setShowFloorTransition(true);
+      setMintingStatus('idle');
+      setMintProgress({ current: 0, total: data.pendingItems.length });
+    };
+
+    const handlePlayerDied = (data?: { pendingItems?: ItemData[] }) => {
+      if (data?.pendingItems && data.pendingItems.length > 0) {
+        setPendingItems(data.pendingItems);
+        setShowFloorTransition(true);
+        setMintingStatus('idle');
+        setMintProgress({ current: 0, total: data.pendingItems.length });
+      }
+    };
+
+    EventBus.on('floor-transition', handleFloorTransition);
+    EventBus.on('player-died', handlePlayerDied);
+
+    return () => {
+      EventBus.off('floor-transition', handleFloorTransition);
+      EventBus.off('player-died', handlePlayerDied);
+    };
+  }, []);
+
+  const handleConfirmMint = useCallback(async () => {
+    if (!account?.address || pendingItems.length === 0) {
       return;
     }
 
-    setMintingItem(item);
-    setMintStatus('pending');
-    setTxDigest(undefined);
+    setMintingStatus('minting');
+    let successCount = 0;
 
-    try {
-      const tx = createMintItemTransaction({
-        item,
-        recipientAddress: account.address,
-      });
+    for (let i = 0; i < pendingItems.length; i++) {
+      const item = pendingItems[i];
+      setMintProgress({ current: i + 1, total: pendingItems.length });
 
-      const result = await signAndExecute({
-        transaction: tx,
-      });
+      try {
+        const tx = createMintItemTransaction({
+          item,
+          recipientAddress: account.address,
+        });
 
-      setMintStatus('success');
-      setTxDigest(result.digest);
-      console.log('Item minted successfully:', result);
-    } catch (error) {
-      console.error('Failed to mint item:', error);
-      setMintStatus('error');
+        await signAndExecute({ transaction: tx });
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to mint item ${item.name}:`, error);
+      }
     }
-  }, [account?.address, signAndExecute]);
 
-  const handleNotificationClose = useCallback(() => {
-    setMintingItem(null);
-    setMintStatus(null);
-    setTxDigest(undefined);
+    if (successCount === pendingItems.length) {
+      setMintingStatus('success');
+    } else if (successCount > 0) {
+      setMintingStatus('success'); // Partial success
+    } else {
+      setMintingStatus('error');
+    }
+  }, [account?.address, pendingItems, signAndExecute]);
+
+  const handleSkipOrContinue = useCallback(() => {
+    setShowFloorTransition(false);
+    setPendingItems([]);
+    setMintingStatus('idle');
+    
+    // Tell the game to proceed to next floor
+    EventBus.emit('proceed-to-next-floor');
+  }, []);
+
+  const handleGameReady = useCallback((game: Phaser.Game) => {
+    gameRef.current = game;
   }, []);
 
   return (
@@ -85,7 +132,7 @@ function GameApp() {
           </div>
         )}
         
-        <PhaserGame onItemPickup={handleItemPickup} />
+        <PhaserGame onGameReady={handleGameReady} />
       </main>
 
       <footer className="footer">
@@ -108,11 +155,14 @@ function GameApp() {
         <span className="network-badge">Testnet</span>
       </footer>
 
-      <MintNotification 
-        item={mintingItem}
-        status={mintStatus}
-        txDigest={txDigest}
-        onClose={handleNotificationClose}
+      <FloorTransitionModal 
+        visible={showFloorTransition}
+        floor={currentFloor}
+        pendingItems={pendingItems}
+        mintingStatus={mintingStatus}
+        mintProgress={mintProgress}
+        onConfirmMint={handleConfirmMint}
+        onSkip={handleSkipOrContinue}
       />
     </div>
   );

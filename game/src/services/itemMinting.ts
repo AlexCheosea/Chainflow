@@ -2,14 +2,11 @@ import { Transaction } from '@mysten/sui/transactions';
 import { CONTRACT_CONFIG, suiClient } from '../config/sui';
 import type { ItemData } from '../game/entities/Item';
 
-// Rarity to image URL mapping (placeholder URLs)
-const RARITY_IMAGES: Record<string, string> = {
-  common: 'https://raw.githubusercontent.com/AlexCheosea/Chainflow/main/assets/items/common.png',
-  uncommon: 'https://raw.githubusercontent.com/AlexCheosea/Chainflow/main/assets/items/uncommon.png',
-  rare: 'https://raw.githubusercontent.com/AlexCheosea/Chainflow/main/assets/items/rare.png',
-  epic: 'https://raw.githubusercontent.com/AlexCheosea/Chainflow/main/assets/items/epic.png',
-  legendary: 'https://raw.githubusercontent.com/AlexCheosea/Chainflow/main/assets/items/legendary.png',
-};
+// Generate image URL based on item type and rarity (placeholder URLs)
+function getItemImageUrl(item: ItemData): string {
+  const baseUrl = 'https://raw.githubusercontent.com/AlexCheosea/Chainflow/main/assets/items';
+  return `${baseUrl}/${item.itemType}_${item.rarity}.png`;
+}
 
 export interface MintItemParams {
   item: ItemData;
@@ -24,15 +21,21 @@ export function createMintItemTransaction(params: MintItemParams): Transaction {
   
   const tx = new Transaction();
   
+  // Create a name that includes floor information
+  const displayName = `${item.name} (Floor ${item.floorObtained})`;
+  
+  // Create a detailed description
+  const description = `A ${item.rarity} ${item.itemType} found on floor ${item.floorObtained}. ⚔️ Attack: ${item.attack} | 🛡️ Defense: ${item.defense}`;
+  
   tx.moveCall({
     target: `${CONTRACT_CONFIG.packageId}::${CONTRACT_CONFIG.module}::${CONTRACT_CONFIG.mintFunction}`,
     arguments: [
-      tx.pure.vector('u8', Array.from(new TextEncoder().encode(item.name))),
+      tx.pure.vector('u8', Array.from(new TextEncoder().encode(displayName))),
       tx.pure.vector('u8', Array.from(new TextEncoder().encode(item.rarity))),
       tx.pure.u64(item.attack),
       tx.pure.u64(item.defense),
-      tx.pure.vector('u8', Array.from(new TextEncoder().encode(item.description))),
-      tx.pure.vector('u8', Array.from(new TextEncoder().encode(RARITY_IMAGES[item.rarity] || RARITY_IMAGES.common))),
+      tx.pure.vector('u8', Array.from(new TextEncoder().encode(description))),
+      tx.pure.vector('u8', Array.from(new TextEncoder().encode(getItemImageUrl(item)))),
       tx.pure.address(recipientAddress),
     ],
   });
@@ -53,6 +56,7 @@ export async function fetchOwnedItems(address: string): Promise<OwnedItem[]> {
       options: {
         showContent: true,
         showType: true,
+        showDisplay: true,
       },
     });
 
@@ -60,14 +64,16 @@ export async function fetchOwnedItems(address: string): Promise<OwnedItem[]> {
       .filter((obj) => obj.data?.content?.dataType === 'moveObject')
       .map((obj) => {
         const content = obj.data!.content as { fields: Record<string, unknown> };
+        const display = obj.data?.display?.data as Record<string, string> | undefined;
+        
         return {
           id: obj.data!.objectId,
-          name: content.fields.name as string,
+          name: (display?.name || content.fields.name) as string,
           rarity: content.fields.rarity as string,
           attack: Number(content.fields.attack),
           defense: Number(content.fields.defense),
-          description: content.fields.description as string,
-          imageUrl: content.fields.image_url as string,
+          description: (display?.description || content.fields.description) as string,
+          imageUrl: (display?.image_url || content.fields.image_url) as string,
         };
       });
   } catch (error) {

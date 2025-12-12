@@ -2,13 +2,12 @@ import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { gameConfig } from '../game/config';
 import { EventBus } from '../game/EventBus';
-import type { ItemData } from '../game/entities/Item';
 
 interface PhaserGameProps {
-  onItemPickup: (item: ItemData) => void;
+  onGameReady?: (game: Phaser.Game) => void;
 }
 
-export function PhaserGame({ onItemPickup }: PhaserGameProps) {
+export function PhaserGame({ onGameReady }: PhaserGameProps) {
   const gameRef = useRef<Phaser.Game | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -19,6 +18,11 @@ export function PhaserGame({ onItemPickup }: PhaserGameProps) {
         ...gameConfig,
         parent: containerRef.current,
       });
+      
+      // Notify parent that game is ready
+      if (onGameReady) {
+        onGameReady(gameRef.current);
+      }
     }
 
     return () => {
@@ -27,33 +31,37 @@ export function PhaserGame({ onItemPickup }: PhaserGameProps) {
         gameRef.current = null;
       }
     };
-  }, []);
+  }, [onGameReady]);
 
   useEffect(() => {
-    // Listen for item pickups
-    const handleItemPickup = (item: ItemData) => {
-      onItemPickup(item);
-    };
-
     const handleRestart = () => {
       if (gameRef.current) {
         const gameScene = gameRef.current.scene.getScene('GameScene');
         if (gameScene) {
           gameRef.current.scene.stop('UIScene');
           gameRef.current.scene.stop('GameScene');
-          gameRef.current.scene.start('GameScene');
+          gameRef.current.scene.start('GameScene', { floor: 1, pendingItems: [] });
         }
       }
     };
 
-    EventBus.on('item-picked-up', handleItemPickup);
+    const handleProceedToNextFloor = () => {
+      if (gameRef.current) {
+        const gameScene = gameRef.current.scene.getScene('GameScene') as { proceedToNextFloor?: () => void };
+        if (gameScene && gameScene.proceedToNextFloor) {
+          gameScene.proceedToNextFloor();
+        }
+      }
+    };
+
     EventBus.on('restart-game', handleRestart);
+    EventBus.on('proceed-to-next-floor', handleProceedToNextFloor);
 
     return () => {
-      EventBus.off('item-picked-up', handleItemPickup);
       EventBus.off('restart-game', handleRestart);
+      EventBus.off('proceed-to-next-floor', handleProceedToNextFloor);
     };
-  }, [onItemPickup]);
+  }, []);
 
   return (
     <div 

@@ -1,12 +1,15 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback } from 'react';
 import type { ItemData } from '../game/entities/Item';
 import './MintNotification.css';
 
-interface MintNotificationProps {
-  item: ItemData | null;
-  status: 'pending' | 'success' | 'error' | null;
-  txDigest?: string;
-  onClose: () => void;
+interface FloorTransitionProps {
+  visible: boolean;
+  floor: number;
+  pendingItems: ItemData[];
+  mintingStatus: 'idle' | 'minting' | 'success' | 'error';
+  mintProgress: { current: number; total: number };
+  onConfirmMint: () => void;
+  onSkip: () => void;
 }
 
 const RARITY_COLORS: Record<string, string> = {
@@ -17,82 +20,146 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: '#ffaa00',
 };
 
-export function MintNotification({ item, status, txDigest, onClose }: MintNotificationProps) {
-  const visible = useMemo(() => !!(item && status), [item, status]);
+const ITEM_TYPE_ICONS: Record<string, string> = {
+  weapon: '⚔️',
+  armor: '🛡️',
+};
 
-  useEffect(() => {
-    if (visible && status === 'success') {
-      // Auto-close after success
-      const timer = setTimeout(() => {
-        onClose();
-      }, 5000);
-      return () => clearTimeout(timer);
+export function FloorTransitionModal({ 
+  visible, 
+  floor, 
+  pendingItems, 
+  mintingStatus, 
+  mintProgress,
+  onConfirmMint, 
+  onSkip 
+}: FloorTransitionProps) {
+  const getItemImage = useCallback((item: ItemData) => {
+    // Generate a simple SVG preview based on item type and rarity
+    const color = RARITY_COLORS[item.rarity] || '#ffffff';
+    const isWeapon = item.itemType === 'weapon';
+    
+    if (isWeapon) {
+      // Sword SVG
+      return `data:image/svg+xml,${encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+          <rect x="28" y="4" width="8" height="40" fill="${color}" rx="2"/>
+          <polygon points="32,0 24,12 40,12" fill="${color}"/>
+          <rect x="20" y="40" width="24" height="6" fill="${color}" rx="2"/>
+          <rect x="26" y="46" width="12" height="14" fill="#8b4513" rx="2"/>
+          <text x="32" y="58" text-anchor="middle" fill="white" font-size="8">F${item.floorObtained}</text>
+        </svg>
+      `)}`;
+    } else {
+      // Shield SVG
+      return `data:image/svg+xml,${encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+          <path d="M32 4 L56 16 L56 36 Q56 52 32 60 Q8 52 8 36 L8 16 Z" fill="${color}" stroke="#333" stroke-width="2"/>
+          <circle cx="32" cy="32" r="10" fill="#ffd700" opacity="0.7"/>
+          <text x="32" y="36" text-anchor="middle" fill="white" font-size="10" font-weight="bold">F${item.floorObtained}</text>
+        </svg>
+      `)}`;
     }
-  }, [visible, status, onClose]);
+  }, []);
 
-  if (!item || !status || !visible) {
+  if (!visible) {
     return null;
   }
 
   return (
-    <div className={`mint-notification ${status} ${visible ? 'visible' : ''}`}>
-      <div className="notification-content">
-        {status === 'pending' && (
-          <>
-            <div className="spinner"></div>
-            <div className="notification-text">
-              <div className="title">Minting NFT...</div>
-              <div 
-                className="item-name"
-                style={{ color: RARITY_COLORS[item.rarity] }}
-              >
-                {item.name}
-              </div>
-            </div>
-          </>
-        )}
+    <div className="floor-transition-overlay">
+      <div className="floor-transition-modal">
+        <h2 className="floor-title">🌀 Floor {floor} Complete!</h2>
         
-        {status === 'success' && (
+        {pendingItems.length > 0 ? (
           <>
-            <div className="success-icon">✓</div>
-            <div className="notification-text">
-              <div className="title">Item Minted!</div>
-              <div 
-                className="item-name"
-                style={{ color: RARITY_COLORS[item.rarity] }}
-              >
-                {item.name}
-              </div>
-              <div className="item-stats">
-                ⚔️ {item.attack} | 🛡️ {item.defense}
-              </div>
-              {txDigest && (
-                <a 
-                  href={`https://suiscan.xyz/testnet/tx/${txDigest}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="tx-link"
+            <p className="floor-subtitle">You found {pendingItems.length} item{pendingItems.length > 1 ? 's' : ''}!</p>
+            
+            <div className="pending-items-grid">
+              {pendingItems.map((item, index) => (
+                <div 
+                  key={index} 
+                  className="pending-item-card"
+                  style={{ borderColor: RARITY_COLORS[item.rarity] }}
                 >
-                  View on Explorer →
-                </a>
-              )}
+                  <div className="item-preview">
+                    <img 
+                      src={getItemImage(item)} 
+                      alt={item.name}
+                      className="item-preview-image"
+                    />
+                  </div>
+                  <div className="item-info">
+                    <div 
+                      className="item-name-preview"
+                      style={{ color: RARITY_COLORS[item.rarity] }}
+                    >
+                      {ITEM_TYPE_ICONS[item.itemType]} {item.name}
+                    </div>
+                    <div className="item-rarity">{item.rarity.toUpperCase()}</div>
+                    <div className="item-stats-preview">
+                      <span className="stat">⚔️ {item.attack}</span>
+                      <span className="stat">🛡️ {item.defense}</span>
+                    </div>
+                    <div className="item-floor">Floor {item.floorObtained}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </>
-        )}
-        
-        {status === 'error' && (
-          <>
-            <div className="error-icon">✗</div>
-            <div className="notification-text">
-              <div className="title">Minting Failed</div>
-              <div className="error-message">
-                Please try again or check your wallet connection
+
+            {mintingStatus === 'idle' && (
+              <div className="floor-actions">
+                <button className="mint-confirm-btn" onClick={onConfirmMint}>
+                  ✓ Mint All NFTs
+                </button>
+                <button className="skip-btn" onClick={onSkip}>
+                  Skip (items will not be saved)
+                </button>
               </div>
+            )}
+
+            {mintingStatus === 'minting' && (
+              <div className="minting-progress">
+                <div className="spinner"></div>
+                <p>Minting NFT {mintProgress.current} of {mintProgress.total}...</p>
+              </div>
+            )}
+
+            {mintingStatus === 'success' && (
+              <div className="mint-success">
+                <div className="success-icon">✓</div>
+                <p>All items minted successfully!</p>
+                <button className="continue-btn" onClick={onSkip}>
+                  Continue to Floor {floor + 1}
+                </button>
+              </div>
+            )}
+
+            {mintingStatus === 'error' && (
+              <div className="mint-error">
+                <div className="error-icon">✗</div>
+                <p>Some items failed to mint. Check your wallet connection.</p>
+                <div className="floor-actions">
+                  <button className="mint-confirm-btn" onClick={onConfirmMint}>
+                    Retry
+                  </button>
+                  <button className="skip-btn" onClick={onSkip}>
+                    Continue anyway
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="floor-subtitle">No items found on this floor.</p>
+            <div className="floor-actions">
+              <button className="continue-btn" onClick={onSkip}>
+                Continue to Floor {floor + 1}
+              </button>
             </div>
           </>
         )}
-        
-        <button className="close-btn" onClick={onClose}>×</button>
       </div>
     </div>
   );

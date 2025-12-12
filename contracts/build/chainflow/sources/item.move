@@ -1,5 +1,10 @@
 module chainflow::item {
     use std::string::{Self, String};
+    use sui::package;
+    use sui::display;
+
+    /// One-Time-Witness for the module
+    public struct ITEM has drop {}
 
     /// Represents an in-game item as an NFT
     public struct Item has key, store {
@@ -21,6 +26,44 @@ module chainflow::item {
         name: String,
         rarity: String,
         owner: address,
+    }
+
+    /// Initialize Display for Item NFTs
+    fun init(otw: ITEM, ctx: &mut TxContext) {
+        let keys = vector[
+            string::utf8(b"name"),
+            string::utf8(b"description"),
+            string::utf8(b"image_url"),
+            string::utf8(b"project_url"),
+            string::utf8(b"creator"),
+        ];
+
+        let values = vector[
+            // Display name: shows the item name
+            string::utf8(b"{name}"),
+            // Description with stats
+            string::utf8(b"{description}"),
+            // Image URL
+            string::utf8(b"{image_url}"),
+            // Project URL
+            string::utf8(b"https://github.com/AlexCheosea/Chainflow"),
+            // Creator
+            string::utf8(b"ChainFlow Roguelike"),
+        ];
+
+        let publisher = package::claim(otw, ctx);
+        let mut item_display = display::new_with_fields<Item>(
+            &publisher,
+            keys,
+            values,
+            ctx
+        );
+
+        // Commit the display
+        display::update_version(&mut item_display);
+
+        transfer::public_transfer(publisher, tx_context::sender(ctx));
+        transfer::public_transfer(item_display, tx_context::sender(ctx));
     }
 
     /// Mint a new item NFT and transfer to the player

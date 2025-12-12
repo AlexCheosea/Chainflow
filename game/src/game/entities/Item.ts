@@ -1,19 +1,31 @@
 import Phaser from 'phaser';
 
+export type ItemType = 'weapon' | 'armor';
+
 export interface ItemData {
   name: string;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  itemType: ItemType;
   attack: number;
   defense: number;
   description: string;
+  floorObtained: number;
 }
 
-const ITEM_NAMES = {
-  common: ['Rusty Sword', 'Wooden Shield', 'Cloth Armor', 'Iron Dagger'],
-  uncommon: ['Steel Blade', 'Bronze Shield', 'Leather Armor', 'Short Bow'],
-  rare: ['Enchanted Sword', 'Magic Shield', 'Chain Mail', 'Crossbow'],
-  epic: ['Dragon Slayer', 'Aegis Shield', 'Plate Armor', 'Thunder Staff'],
-  legendary: ['Excalibur', 'Divine Barrier', 'Godplate', 'Chaos Orb'],
+const WEAPON_NAMES = {
+  common: ['Rusty Sword', 'Iron Dagger', 'Wooden Club'],
+  uncommon: ['Steel Blade', 'Short Bow', 'Bronze Axe'],
+  rare: ['Enchanted Sword', 'Crossbow', 'Flame Dagger'],
+  epic: ['Dragon Slayer', 'Thunder Staff', 'Soul Reaper'],
+  legendary: ['Excalibur', 'Chaos Orb', 'Godslayer'],
+};
+
+const ARMOR_NAMES = {
+  common: ['Cloth Armor', 'Wooden Shield', 'Leather Cap'],
+  uncommon: ['Leather Armor', 'Bronze Shield', 'Iron Helm'],
+  rare: ['Chain Mail', 'Magic Shield', 'Steel Plate'],
+  epic: ['Plate Armor', 'Aegis Shield', 'Dragon Scale'],
+  legendary: ['Godplate', 'Divine Barrier', 'Immortal Cloak'],
 };
 
 const RARITY_WEIGHTS = [
@@ -32,14 +44,22 @@ const RARITY_COLORS = {
   legendary: 0xffaa00,
 };
 
+// Base drop chance (20%) - decreases after each drop
+const BASE_DROP_CHANCE = 0.20;
+const DROP_CHANCE_DECAY = 0.5; // Each drop reduces chance by 50%
+
 export class Item {
   public sprite: Phaser.Physics.Arcade.Sprite;
   private itemData: ItemData;
+  private floor: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, floor: number = 1) {
+    this.floor = floor;
     this.itemData = this.generateItemData();
     
-    this.sprite = scene.physics.add.sprite(x, y, 'item');
+    // Use weapon or armor texture based on type
+    const textureKey = this.itemData.itemType === 'weapon' ? 'item_weapon' : 'item_armor';
+    this.sprite = scene.physics.add.sprite(x, y, textureKey);
     this.sprite.setData('ref', this);
     this.sprite.setTint(RARITY_COLORS[this.itemData.rarity]);
     
@@ -68,11 +88,14 @@ export class Item {
       }
     }
 
-    // Get random name for rarity
-    const names = ITEM_NAMES[rarity];
+    // Randomly choose weapon or armor
+    const itemType: ItemType = Math.random() < 0.5 ? 'weapon' : 'armor';
+
+    // Get random name for rarity and type
+    const names = itemType === 'weapon' ? WEAPON_NAMES[rarity] : ARMOR_NAMES[rarity];
     const name = names[Math.floor(Math.random() * names.length)];
 
-    // Generate stats based on rarity
+    // Generate stats based on rarity - weapons have high attack, armor has high defense
     const rarityMultiplier = {
       common: 1,
       uncommon: 1.5,
@@ -82,16 +105,41 @@ export class Item {
     };
 
     const multiplier = rarityMultiplier[rarity];
-    const attack = Math.floor(Phaser.Math.Between(5, 15) * multiplier);
-    const defense = Math.floor(Phaser.Math.Between(3, 10) * multiplier);
+    
+    // Weapons: high attack, low defense. Armor: low attack, high defense
+    let attack: number, defense: number;
+    if (itemType === 'weapon') {
+      attack = Math.floor(Phaser.Math.Between(10, 20) * multiplier);
+      defense = Math.floor(Phaser.Math.Between(1, 3) * multiplier);
+    } else {
+      attack = Math.floor(Phaser.Math.Between(1, 3) * multiplier);
+      defense = Math.floor(Phaser.Math.Between(10, 20) * multiplier);
+    }
 
     return {
       name,
       rarity,
+      itemType,
       attack,
       defense,
-      description: `A ${rarity} ${name.toLowerCase()} with ${attack} attack and ${defense} defense.`,
+      description: `A ${rarity} ${name.toLowerCase()} found on floor ${this.floor}.`,
+      floorObtained: this.floor,
     };
+  }
+
+  /**
+   * Calculate if an item should drop based on current drop count
+   * @param dropsThisFloor - Number of items already dropped this floor
+   * @param maxDrops - Maximum drops allowed per floor
+   * @returns Whether an item should drop
+   */
+  static shouldDrop(dropsThisFloor: number, maxDrops: number = 2): boolean {
+    if (dropsThisFloor >= maxDrops) {
+      return false;
+    }
+    // Each drop reduces chance by decay factor
+    const currentChance = BASE_DROP_CHANCE * Math.pow(DROP_CHANCE_DECAY, dropsThisFloor);
+    return Math.random() < currentChance;
   }
 
   getItemData(): ItemData {
