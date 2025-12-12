@@ -68,8 +68,8 @@ export function PhaserGame({ onGameReady }: PhaserGameProps) {
       ref={containerRef} 
       id="game-container"
       style={{
-        width: '800px',
-        height: '600px',
+        width: '1000px',
+        height: '700px',
         margin: '0 auto',
         border: '2px solid #4a4a6a',
         borderRadius: '8px',

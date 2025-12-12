@@ -146,6 +146,7 @@ function GameApp() {
 
       <main className="game-wrapper">
         <PhaserGame onGameReady={handleGameReady} />
+        <div className="game-tip">WASD / Arrows: Move &nbsp;|&nbsp; Space / Click: Attack &nbsp;|&nbsp; Defeat all enemies to open the gate</div>
       </main>
 
       <FloorTransitionModal 

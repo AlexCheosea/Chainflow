@@ -118,7 +118,7 @@ export class GameScene extends Phaser.Scene {
 
     // Camera follows player
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
-    this.cameras.main.setZoom(1.5);
+    this.cameras.main.setZoom(2.0);
     
     // Emit initial player stats after a short delay to ensure UIScene is ready
     this.time.delayedCall(100, () => {
@@ -286,7 +286,10 @@ export class GameScene extends Phaser.Scene {
 
     // Check if player died
     if (this.player.health <= 0) {
-      EventBus.emit('player-died', { pendingItems: this.pendingItems });
+      // On death, picked-up items on this floor are lost — clear pending items
+      this.pendingItems = [];
+      // Emit death event without pending items so the app returns to menu
+      EventBus.emit('player-died');
       this.scene.pause();
     }
   };

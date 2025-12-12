@@ -64,12 +64,7 @@ export class UIScene extends Phaser.Scene {
     // Listen for item collected
     EventBus.on('item-collected', this.onItemCollected, this);
 
-    // Instructions
-    this.add.text(400, 580, 'WASD/Arrows: Move | Space/Click: Attack | Defeat all enemies for gate!', {
-      fontSize: '12px',
-      color: '#888888',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5).setScrollFactor(0);
+    // Instructions moved to React UI (under the playable window)
   }
 
   private updateHealthBar(health: number, maxHealth: number): void {

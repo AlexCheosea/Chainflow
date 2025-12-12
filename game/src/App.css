@@ -66,6 +66,13 @@ body {
   position: relative;
 }
 
+.game-tip {
+  margin-top: 12px;
+  color: #aaaaaa;
+  font-size: 13px;
+  text-align: center;
+}
+
 .connect-prompt {
   position: absolute;
   top: 20px;
