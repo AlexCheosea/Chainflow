@@ -137,8 +137,12 @@ export class DungeonGenerator {
     const startX = Math.min(x1, x2);
     const endX = Math.max(x1, x2);
     for (let x = startX; x <= endX; x++) {
-      if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
-        this.tiles[y][x] = 0;
+      // Carve 3 tiles wide (y-1, y, y+1)
+      for (let dy = -1; dy <= 1; dy++) {
+        const ty = y + dy;
+        if (ty >= 0 && ty < this.height && x >= 0 && x < this.width) {
+          this.tiles[ty][x] = 0;
+        }
       }
     }
   }
@@ -147,8 +151,12 @@ export class DungeonGenerator {
     const startY = Math.min(y1, y2);
     const endY = Math.max(y1, y2);
     for (let y = startY; y <= endY; y++) {
-      if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
-        this.tiles[y][x] = 0;
+      // Carve 3 tiles wide (x-1, x, x+1)
+      for (let dx = -1; dx <= 1; dx++) {
+        const tx = x + dx;
+        if (y >= 0 && y < this.height && tx >= 0 && tx < this.width) {
+          this.tiles[y][tx] = 0;
+        }
       }
     }
   }

@@ -20,12 +20,13 @@ export class Player {
     this.sprite = scene.physics.add.sprite(x, y, 'player_idle_down');
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setData('ref', this);
-    this.sprite.setScale(0.5); // Scale down 64px sprites to 32px
-    this.sprite.setOrigin(0.5, 0.5); // Center origin to prevent visual jumping
+    this.sprite.setScale(0.4); // Scale down 64px sprites to ~26px
+    this.sprite.setOrigin(0.5, 0.5); // Center origin
     
-    // Set hitbox to match scaled size
-    this.sprite.body?.setSize(40, 48);
-    this.sprite.body?.setOffset(12, 14);
+    // Set hitbox to match the scaled sprite size exactly
+    // 64 * 0.4 = 25.6, so hitbox should be close to that
+    this.sprite.body?.setSize(64, 64); // Full frame size
+    this.sprite.body?.setOffset(0, 0); // No offset - hitbox matches sprite exactly
     
     // Start idle animation
     this.sprite.play('idle_down');
