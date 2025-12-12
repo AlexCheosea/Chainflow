@@ -120,6 +120,10 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(2.0);
     
+    // Adjust camera follow lag to match player speed
+    const cameraLerp = 0.5; // Adjust this value to fine-tune the smoothness
+    this.cameras.main.startFollow(this.player.sprite, true, cameraLerp, cameraLerp);
+    
     // Emit initial player stats after a short delay to ensure UIScene is ready
     this.time.delayedCall(100, () => {
       EventBus.emit('player-stats-update', {

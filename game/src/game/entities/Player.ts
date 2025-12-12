@@ -20,7 +20,7 @@ export class Player {
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setData('ref', this);
     const baseFrameSize = 480;
-    const scale = 0.1; // Scale down 480px frames to ~48px on screen
+    const scale = 0.12; // Scale down 480px frames to ~48px on screen
     this.sprite.setScale(scale);
     this.sprite.setOrigin(0.5, 0.5);
 
@@ -74,6 +74,18 @@ export class Player {
     
     if (!currentAnim || currentAnim.key !== animKey || !isPlaying) {
       this.sprite.play(animKey);
+    }
+
+    // Smooth animation frame jitter by ensuring velocity updates are consistent
+    const velocityMagnitude = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+    if (velocityMagnitude > 0 && this.sprite.body) {
+      this.sprite.body.velocity.normalize().scale(velocityMagnitude);
+    }
+
+    // Ensure the sprite position is updated to match the physics body precisely
+    if (this.sprite.body) {
+      this.sprite.x = this.sprite.body.position.x + this.sprite.body.halfWidth;
+      this.sprite.y = this.sprite.body.position.y + this.sprite.body.halfHeight;
     }
   }
 
