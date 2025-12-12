@@ -13,7 +13,6 @@ export class Player {
   private lastDamageTime: number = 0;
   private damageCooldown: number = 500; // ms between damage ticks
   private isAttacking: boolean = false;
-  private currentAnimKey: string = 'idle_down';
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // Use the idle_down animation texture by default
@@ -68,10 +67,13 @@ export class Player {
       animKey = `idle_${this.facing}`;
     }
     
-    // Only play animation if it's different from current (use cached key)
-    if (this.currentAnimKey !== animKey) {
-      this.currentAnimKey = animKey;
-      this.sprite.play(animKey, true);
+    // Only play animation if it's different from current
+    // Also check if animation is actually playing to avoid restarts
+    const currentAnim = this.sprite.anims.currentAnim;
+    const isPlaying = this.sprite.anims.isPlaying;
+    
+    if (!currentAnim || currentAnim.key !== animKey || !isPlaying) {
+      this.sprite.play(animKey);
     }
   }
 
@@ -98,6 +100,9 @@ export class Player {
     // Reset to idle after animation completes
     this.sprite.once('animationcomplete', () => {
       this.isAttacking = false;
+      // Explicitly play idle animation after attack finishes
+      const idleKey = `idle_${this.facing}`;
+      this.sprite.play(idleKey);
     });
   }
 
