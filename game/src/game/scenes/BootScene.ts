@@ -1,18 +1,19 @@
 import Phaser from 'phaser';
 
-// Import player sprite assets
-import idleDown from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_down.png';
-import idleUp from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_up.png';
-import idleLeft from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_left.png';
-import idleRight from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_right.png';
-import runDown from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_down.png';
-import runUp from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_up.png';
-import runLeft from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_left.png';
-import runRight from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_right.png';
-import attackDown from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_down.png';
-import attackUp from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_up.png';
-import attackLeft from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_left.png';
-import attackRight from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_right.png';
+// Import player sprite assets from Sprites_Player_New
+// Direction mapping: Front = down, Back = up, Left = left, Right = right
+import idleDown from '../../assets/Sprites_Player_New/Idle/Front - Idle.png';
+import idleUp from '../../assets/Sprites_Player_New/Idle/Back - Idle.png';
+import idleLeft from '../../assets/Sprites_Player_New/Idle/Left - Idle.png';
+import idleRight from '../../assets/Sprites_Player_New/Idle/Right - Idle.png';
+import runDown from '../../assets/Sprites_Player_New/Running/Front - Running.png';
+import runUp from '../../assets/Sprites_Player_New/Running/Back - Running.png';
+import runLeft from '../../assets/Sprites_Player_New/Running/Left - Running.png';
+import runRight from '../../assets/Sprites_Player_New/Running/Right - Running.png';
+import attackDown from '../../assets/Sprites_Player_New/Attacking/Front - Attacking.png';
+import attackUp from '../../assets/Sprites_Player_New/Attacking/Back - Attacking.png';
+import attackLeft from '../../assets/Sprites_Player_New/Attacking/Left - Attacking.png';
+import attackRight from '../../assets/Sprites_Player_New/Attacking/Right - Attacking.png';
 
 // Enemy rarity colors (matching item rarity)
 const ENEMY_RARITY_COLORS = {
@@ -29,19 +30,20 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Load player sprite sheets (8 frames each, assuming 64x64 per frame = 512x64 strip)
-    this.load.spritesheet('player_idle_down', idleDown, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_idle_up', idleUp, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_idle_left', idleLeft, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_idle_right', idleRight, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_run_down', runDown, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_run_up', runUp, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_run_left', runLeft, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_run_right', runRight, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_attack_down', attackDown, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_attack_up', attackUp, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_attack_left', attackLeft, { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('player_attack_right', attackRight, { frameWidth: 64, frameHeight: 64 });
+    // Load player sprite sheets (480x480 per frame)
+    // Idle: 4x4 grid = 16 frames, Running: 4x3 grid = 12 frames, Attack: 5x2 grid = 10 frames
+    this.load.spritesheet('player_idle_down', idleDown, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_idle_up', idleUp, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_idle_left', idleLeft, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_idle_right', idleRight, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_run_down', runDown, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_run_up', runUp, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_run_left', runLeft, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_run_right', runRight, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_attack_down', attackDown, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_attack_up', attackUp, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_attack_left', attackLeft, { frameWidth: 480, frameHeight: 480 });
+    this.load.spritesheet('player_attack_right', attackRight, { frameWidth: 480, frameHeight: 480 });
   }
 
   create(): void {
@@ -58,23 +60,23 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations(): void {
-    // Idle animations
-    this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('player_idle_down', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-    this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('player_idle_up', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-    this.anims.create({ key: 'idle_left', frames: this.anims.generateFrameNumbers('player_idle_left', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-    this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('player_idle_right', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+    // Idle animations (16 frames: 0-15)
+    this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('player_idle_down', { start: 0, end: 15 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('player_idle_up', { start: 0, end: 15 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_left', frames: this.anims.generateFrameNumbers('player_idle_left', { start: 0, end: 15 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('player_idle_right', { start: 0, end: 15 }), frameRate: 8, repeat: -1 });
     
-    // Run animations
-    this.anims.create({ key: 'run_down', frames: this.anims.generateFrameNumbers('player_run_down', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'run_up', frames: this.anims.generateFrameNumbers('player_run_up', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'run_left', frames: this.anims.generateFrameNumbers('player_run_left', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'run_right', frames: this.anims.generateFrameNumbers('player_run_right', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
+    // Run animations (12 frames: 0-11)
+    this.anims.create({ key: 'run_down', frames: this.anims.generateFrameNumbers('player_run_down', { start: 0, end: 11 }), frameRate: 12, repeat: -1 });
+    this.anims.create({ key: 'run_up', frames: this.anims.generateFrameNumbers('player_run_up', { start: 0, end: 11 }), frameRate: 12, repeat: -1 });
+    this.anims.create({ key: 'run_left', frames: this.anims.generateFrameNumbers('player_run_left', { start: 0, end: 11 }), frameRate: 12, repeat: -1 });
+    this.anims.create({ key: 'run_right', frames: this.anims.generateFrameNumbers('player_run_right', { start: 0, end: 11 }), frameRate: 12, repeat: -1 });
     
-    // Attack animations
-    this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('player_attack_down', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
-    this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('player_attack_up', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
-    this.anims.create({ key: 'attack_left', frames: this.anims.generateFrameNumbers('player_attack_left', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
-    this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('player_attack_right', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
+    // Attack animations (10 frames: 0-9)
+    this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('player_attack_down', { start: 0, end: 9 }), frameRate: 20, repeat: 0 });
+    this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('player_attack_up', { start: 0, end: 9 }), frameRate: 20, repeat: 0 });
+    this.anims.create({ key: 'attack_left', frames: this.anims.generateFrameNumbers('player_attack_left', { start: 0, end: 9 }), frameRate: 20, repeat: 0 });
+    this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('player_attack_right', { start: 0, end: 9 }), frameRate: 20, repeat: 0 });
   }
 
   private createPlayerFallback(): void {
