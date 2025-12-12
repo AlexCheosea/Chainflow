@@ -121,9 +121,8 @@ function GameApp() {
 
   const handleGameReady = useCallback((game: Phaser.Game) => {
     gameRef.current = game;
-    // Pass equipment bonuses to game
-    EventBus.emit('set-equipment-bonus', { attack: equipmentBonusAttack, defense: equipmentBonusDefense });
-  }, [equipmentBonusAttack, equipmentBonusDefense]);
+    // Equipment bonuses are now emitted from MainMenu when Play is clicked
+  }, []);
 
   // Show main menu if game not started
   if (!gameStarted) {
@@ -139,7 +138,7 @@ function GameApp() {
         </div>
         <div className="header-right">
           <button className="menu-btn-small" onClick={() => setGameStarted(false)}>
-            ☰ Menu
+            Menu
           </button>
           <WalletConnect />
         </div>

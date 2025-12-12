@@ -1,5 +1,19 @@
 import Phaser from 'phaser';
 
+// Import player sprite assets
+import idleDown from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_down.png';
+import idleUp from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_up.png';
+import idleLeft from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_left.png';
+import idleRight from '../../assets/Sprites_Player/IDLE_8_FRAMES_EACH/idle_right.png';
+import runDown from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_down.png';
+import runUp from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_up.png';
+import runLeft from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_left.png';
+import runRight from '../../assets/Sprites_Player/RUN_8_FRAMES_EACH/run_right.png';
+import attackDown from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_down.png';
+import attackUp from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_up.png';
+import attackLeft from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_left.png';
+import attackRight from '../../assets/Sprites_Player/ATTACK_8_FRAMES_EACH/attack1_right.png';
+
 // Enemy rarity colors (matching item rarity)
 const ENEMY_RARITY_COLORS = {
   normal: { body: 0x888888, accent: 0xaaaaaa },    // Gray - common enemies
@@ -15,18 +29,55 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Create all game sprites
-    this.createPlayerSprite();
-    this.createEnemySprites();
-    this.createItemSprites();
-    this.createEnvironmentSprites();
+    // Load player sprite sheets (8 frames each, assuming 64x64 per frame = 512x64 strip)
+    this.load.spritesheet('player_idle_down', idleDown, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_idle_up', idleUp, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_idle_left', idleLeft, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_idle_right', idleRight, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_run_down', runDown, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_run_up', runUp, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_run_left', runLeft, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_run_right', runRight, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_attack_down', attackDown, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_attack_up', attackUp, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_attack_left', attackLeft, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('player_attack_right', attackRight, { frameWidth: 64, frameHeight: 64 });
   }
 
   create(): void {
+    // Create procedural sprites for enemies, items, environment
+    this.createPlayerFallback();
+    this.createEnemySprites();
+    this.createItemSprites();
+    this.createEnvironmentSprites();
+    
+    // Create player animations
+    this.createPlayerAnimations();
+    
     this.scene.start('GameScene');
   }
 
-  private createPlayerSprite(): void {
+  private createPlayerAnimations(): void {
+    // Idle animations
+    this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('player_idle_down', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('player_idle_up', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_left', frames: this.anims.generateFrameNumbers('player_idle_left', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('player_idle_right', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+    
+    // Run animations
+    this.anims.create({ key: 'run_down', frames: this.anims.generateFrameNumbers('player_run_down', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
+    this.anims.create({ key: 'run_up', frames: this.anims.generateFrameNumbers('player_run_up', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
+    this.anims.create({ key: 'run_left', frames: this.anims.generateFrameNumbers('player_run_left', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
+    this.anims.create({ key: 'run_right', frames: this.anims.generateFrameNumbers('player_run_right', { start: 0, end: 7 }), frameRate: 10, repeat: -1 });
+    
+    // Attack animations
+    this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('player_attack_down', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
+    this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('player_attack_up', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
+    this.anims.create({ key: 'attack_left', frames: this.anims.generateFrameNumbers('player_attack_left', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
+    this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('player_attack_right', { start: 0, end: 7 }), frameRate: 16, repeat: 0 });
+  }
+
+  private createPlayerFallback(): void {
     // Detailed knight sprite
     const g = this.make.graphics({ x: 0, y: 0 });
     
@@ -194,12 +245,17 @@ export class BootScene extends Phaser.Scene {
     floorGraphics.generateTexture('floor', 32, 32);
     floorGraphics.destroy();
     
-    // Attack effect sprite (slash arc)
+    // Attack effect sprite (larger slash arc for 70px range)
     const attackGraphics = this.make.graphics({ x: 0, y: 0 });
-    attackGraphics.fillStyle(0xffffff, 0.8);
-    attackGraphics.slice(16, 16, 20, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(90), false);
+    attackGraphics.fillStyle(0xffffff, 0.9);
+    // Create a larger arc that matches the attack range
+    attackGraphics.slice(32, 32, 30, Phaser.Math.DegToRad(-45), Phaser.Math.DegToRad(45), false);
     attackGraphics.fillPath();
-    attackGraphics.generateTexture('attack_slash', 32, 32);
+    // Add a stroke for visibility
+    attackGraphics.lineStyle(3, 0xaaddff, 0.8);
+    attackGraphics.arc(32, 32, 30, Phaser.Math.DegToRad(-45), Phaser.Math.DegToRad(45), false);
+    attackGraphics.stroke();
+    attackGraphics.generateTexture('attack_slash', 64, 64);
     attackGraphics.destroy();
   }
 }

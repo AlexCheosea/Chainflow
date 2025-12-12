@@ -132,6 +132,24 @@ body {
   text-transform: uppercase;
 }
 
+.menu-btn-small {
+  background: linear-gradient(135deg, #ff6600 0%, #ff3300 100%);
+  color: #ffffff;
+  border: 2px solid #ff8844;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-btn-small:hover {
+  background: linear-gradient(135deg, #ff8800 0%, #ff5500 100%);
+  border-color: #ffaa66;
+  transform: scale(1.05);
+}
+
 /* Override dapp-kit button styles */
 button[class*="connect"] {
   background: linear-gradient(90deg, #00ff88, #00aaff) !important;

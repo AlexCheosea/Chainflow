@@ -81,56 +81,76 @@ export class UIScene extends Phaser.Scene {
   }
 
   private onPlayerStatsUpdate(data: { health: number; maxHealth: number; attack?: number; defense?: number; floor?: number }): void {
-    this.healthText.setText(`${data.health}/${data.maxHealth}`);
-    this.updateHealthBar(data.health, data.maxHealth);
+    // Guard against null references (can happen during scene transitions)
+    if (!this.healthText || !this.healthBar) return;
     
-    if (data.attack !== undefined && data.defense !== undefined) {
-      this.statsText.setText(`⚔️ ${data.attack}  🛡️ ${data.defense}`);
-    }
-    
-    if (data.floor !== undefined) {
-      this.floorText.setText(`Floor ${data.floor}`);
+    try {
+      this.healthText.setText(`${data.health}/${data.maxHealth}`);
+      this.updateHealthBar(data.health, data.maxHealth);
+      
+      if (data.attack !== undefined && data.defense !== undefined && this.statsText) {
+        this.statsText.setText(`⚔️ ${data.attack}  🛡️ ${data.defense}`);
+      }
+      
+      if (data.floor !== undefined && this.floorText) {
+        this.floorText.setText(`Floor ${data.floor}`);
+      }
+    } catch (error) {
+      // Silently catch any errors during UI updates (race conditions with scene destruction)
+      console.warn('UIScene update error (likely scene transition):', error);
     }
   }
 
   private onGateSpawned(data: { floor: number }): void {
-    this.gateNotification.setText(`🌀 Gate opened on Floor ${data.floor}! Find the portal!`);
-    this.gateNotification.setAlpha(1);
+    if (!this.gateNotification) return;
     
-    // Fade out after 3 seconds
-    this.tweens.add({
-      targets: this.gateNotification,
-      alpha: 0,
-      delay: 3000,
-      duration: 1000,
-    });
+    try {
+      this.gateNotification.setText(`🌀 Gate opened on Floor ${data.floor}! Find the portal!`);
+      this.gateNotification.setAlpha(1);
+      
+      // Fade out after 3 seconds
+      this.tweens.add({
+        targets: this.gateNotification,
+        alpha: 0,
+        delay: 3000,
+        duration: 1000,
+      });
+    } catch (error) {
+      console.warn('UIScene gate notification error:', error);
+    }
   }
 
   private onItemCollected(item: { name: string; rarity: string }): void {
-    // Show brief item pickup notification
-    const rarityColors: Record<string, string> = {
-      common: '#aaaaaa',
-      uncommon: '#00ff00',
-      rare: '#0088ff',
-      epic: '#aa00ff',
-      legendary: '#ffaa00',
-    };
+    if (!this.scene || !this.scene.isActive()) return;
     
-    const notification = this.add.text(400, 100, `+ ${item.name}`, {
-      fontSize: '16px',
-      color: rarityColors[item.rarity] || '#ffffff',
-      fontFamily: 'monospace',
-      fontStyle: 'bold',
-    }).setOrigin(0.5).setScrollFactor(0);
-    
-    // Float up and fade out
-    this.tweens.add({
-      targets: notification,
-      y: 60,
-      alpha: 0,
-      duration: 1500,
-      onComplete: () => notification.destroy(),
-    });
+    try {
+      // Show brief item pickup notification
+      const rarityColors: Record<string, string> = {
+        common: '#aaaaaa',
+        uncommon: '#00ff00',
+        rare: '#0088ff',
+        epic: '#aa00ff',
+        legendary: '#ffaa00',
+      };
+      
+      const notification = this.add.text(400, 100, `+ ${item.name}`, {
+        fontSize: '16px',
+        color: rarityColors[item.rarity] || '#ffffff',
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      }).setOrigin(0.5).setScrollFactor(0);
+      
+      // Float up and fade out
+      this.tweens.add({
+        targets: notification,
+        y: 60,
+        alpha: 0,
+        duration: 1500,
+        onComplete: () => notification.destroy(),
+      });
+    } catch (error) {
+      console.warn('UIScene item collected error:', error);
+    }
   }
 
   private onPlayerDied(data?: { pendingItems?: unknown[] }): void {

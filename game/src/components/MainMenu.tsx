@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useGameContext, getItemSlotType } from '../context/GameContext';
 import { WalletConnect } from './WalletConnect';
+import { EventBus } from '../game/EventBus';
 import type { OwnedItem } from '../services/itemMinting';
 import './MainMenu.css';
 
@@ -40,6 +41,12 @@ export function MainMenu() {
     }
   };
 
+  const handlePlayGame = () => {
+    // Emit equipment bonuses to game BEFORE starting
+    EventBus.emit('set-equipment-bonus', { attack: equipmentBonusAttack, defense: equipmentBonusDefense });
+    setGameStarted(true);
+  };
+
   return (
     <div className="main-menu">
       <div className="menu-content">
@@ -54,7 +61,7 @@ export function MainMenu() {
           <div className="menu-buttons">
             <button 
               className="menu-btn play-btn" 
-              onClick={() => setGameStarted(true)}
+              onClick={handlePlayGame}
             >
               🎮 Play Game
             </button>
@@ -64,6 +71,13 @@ export function MainMenu() {
               disabled={!account}
             >
               📦 Inventory & Equipment
+            </button>
+            <button 
+              className="menu-btn marketplace-btn" 
+              disabled={true}
+            >
+              🛒 Marketplace
+              <span className="coming-soon-badge">Coming Soon</span>
             </button>
             {!account && (
               <p className="connect-hint">Connect wallet to access inventory</p>

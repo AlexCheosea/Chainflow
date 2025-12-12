@@ -28,6 +28,12 @@ export class GameScene extends Phaser.Scene {
   // Attack system
   private attackCooldown: number = 0;
   private attackCooldownTime: number = 400; // ms between attacks
+  private attackRange: number = 70; // Increased attack range
+  
+  // Equipment bonuses (set from main menu before game starts)
+  private equipmentBonusAttack: number = 0;
+  private equipmentBonusDefense: number = 0;
+  private equipmentBonusApplied: boolean = false;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -40,6 +46,12 @@ export class GameScene extends Phaser.Scene {
     this.dropsThisFloor = 0;
     this.gateSpawned = false;
     this.gate = null;
+    
+    // Only apply equipment bonus on first floor (game start)
+    this.equipmentBonusApplied = this.currentFloor > 1;
+    
+    // Listen for equipment bonus from main menu
+    EventBus.on('set-equipment-bonus', this.onSetEquipmentBonus, this);
   }
 
   create(): void {
@@ -54,19 +66,29 @@ export class GameScene extends Phaser.Scene {
     // Create player at spawn point
     const spawn = this.dungeon.getSpawnPoint();
     this.player = new Player(this, spawn.x * 32 + 16, spawn.y * 32 + 16);
+    
+    // Apply equipment bonuses from main menu (only once at game start)
+    if (!this.equipmentBonusApplied) {
+      this.player.setBaseStats(this.equipmentBonusAttack, this.equipmentBonusDefense);
+      this.equipmentBonusApplied = true;
+    }
 
     // Spawn enemies in rooms (scaled by floor)
     this.spawnEnemies();
 
-    // Set up input
-    this.cursors = this.input.keyboard!.createCursorKeys();
+    // Set up input (with null checks)
+    if (!this.input.keyboard) {
+      console.error('Keyboard input not available');
+      return;
+    }
+    this.cursors = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
-      W: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-      A: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-      S: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-      D: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+      D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
-    this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.attackKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     
     // Mouse click to attack
     this.input.on('pointerdown', () => {
@@ -101,7 +123,7 @@ export class GameScene extends Phaser.Scene {
     // Camera follows player
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(1.5);
-
+    
     // Emit initial player stats
     EventBus.emit('player-stats-update', {
       health: this.player.health,
@@ -110,6 +132,34 @@ export class GameScene extends Phaser.Scene {
       defense: this.player.defense,
       floor: this.currentFloor,
     });
+  }
+  
+  private onSetEquipmentBonus(data: { attack: number; defense: number }): void {
+    // Only apply once at game start
+    if (this.equipmentBonusApplied) return;
+    
+    this.equipmentBonusAttack = data.attack;
+    this.equipmentBonusDefense = data.defense;
+    
+    // Apply to player if already created
+    if (this.player) {
+      this.player.setBaseStats(data.attack, data.defense);
+      this.equipmentBonusApplied = true;
+      
+      // Update UI
+      EventBus.emit('player-stats-update', {
+        health: this.player.health,
+        maxHealth: this.player.maxHealth,
+        attack: this.player.attack,
+        defense: this.player.defense,
+        floor: this.currentFloor,
+      });
+    }
+  }
+  
+  shutdown(): void {
+    // Clean up EventBus listeners
+    EventBus.off('set-equipment-bonus', this.onSetEquipmentBonus, this);
   }
 
   update(): void {
@@ -143,6 +193,7 @@ export class GameScene extends Phaser.Scene {
 
     // Update enemies (chase player)
     this.enemies.getChildren().forEach((enemySprite) => {
+      if (!enemySprite || !(enemySprite as Phaser.Physics.Arcade.Sprite).active) return;
       const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('ref') as Enemy;
       if (enemy) {
         enemy.update(this.player.sprite.x, this.player.sprite.y);
@@ -286,27 +337,31 @@ export class GameScene extends Phaser.Scene {
       worldPoint.y
     );
     
-    // Create attack slash visual
-    const attackRange = 50;
-    const attackX = this.player.sprite.x + Math.cos(angle) * 30;
-    const attackY = this.player.sprite.y + Math.sin(angle) * 30;
+    // Play player attack animation
+    this.player.playAttackAnimation(angle);
     
-    const slash = this.add.sprite(attackX, attackY, 'attack_slash');
-    slash.setRotation(angle);
-    slash.setAlpha(0.8);
-    slash.setScale(1.5);
+    // Create attack slash visual - originates slightly in front of player
+    const offsetDistance = 8; // Small offset from player center
+    const slashX = this.player.sprite.x + Math.cos(angle) * offsetDistance;
+    const slashY = this.player.sprite.y + Math.sin(angle) * offsetDistance;
+    const slash = this.add.sprite(slashX, slashY, 'attack_slash');
+    slash.setRotation(angle); // Point in attack direction
+    slash.setOrigin(0, 0.5); // Origin at left-center so it extends outward from player
+    slash.setAlpha(0.7);
+    slash.setScale(this.attackRange / 35); // Scale to match attack range
     
     // Animate slash
     this.tweens.add({
       targets: slash,
       alpha: 0,
-      scale: 2,
+      scale: slash.scale * 1.3,
       duration: 200,
       onComplete: () => slash.destroy(),
     });
     
     // Check for enemies in attack range
     this.enemies.getChildren().forEach((enemySprite) => {
+      if (!enemySprite || !(enemySprite as Phaser.Physics.Arcade.Sprite).active) return;
       const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('ref') as Enemy;
       if (!enemy) return;
       
@@ -318,7 +373,7 @@ export class GameScene extends Phaser.Scene {
       );
       
       // Check if enemy is within attack range and in the direction of attack
-      if (distance < attackRange) {
+      if (distance < this.attackRange) {
         const enemyAngle = Phaser.Math.Angle.Between(
           this.player.sprite.x,
           this.player.sprite.y,
@@ -371,8 +426,9 @@ export class GameScene extends Phaser.Scene {
     
     const itemData = item.getItemData();
     
-    // Apply item stats to player immediately
-    this.player.equipItem(itemData);
+    // Add item stats directly to player (NOT equipItem - that's for permanent equipment)
+    this.player.attack += itemData.attack;
+    this.player.defense += itemData.defense;
     
     // Add to pending items for minting on floor transition
     this.pendingItems.push(itemData);
