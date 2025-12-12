@@ -13,6 +13,7 @@ export class GameScene extends Phaser.Scene {
   private dungeon!: DungeonGenerator;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasdKeys!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+  private attackKey!: Phaser.Input.Keyboard.Key;
   
   // Floor system
   private currentFloor: number = 1;
@@ -23,6 +24,10 @@ export class GameScene extends Phaser.Scene {
   // Gate (appears when all enemies defeated)
   private gate: Phaser.Physics.Arcade.Sprite | null = null;
   private gateSpawned: boolean = false;
+  
+  // Attack system
+  private attackCooldown: number = 0;
+  private attackCooldownTime: number = 400; // ms between attacks
 
   constructor() {
     super({ key: 'GameScene' });
@@ -61,12 +66,18 @@ export class GameScene extends Phaser.Scene {
       S: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       D: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
+    this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    
+    // Mouse click to attack
+    this.input.on('pointerdown', () => {
+      this.performAttack();
+    });
 
     // Set up collisions
     this.physics.add.collider(this.player.sprite, this.dungeon.getWallLayer());
     this.physics.add.collider(this.enemies, this.dungeon.getWallLayer());
     
-    // Player-enemy collision (combat)
+    // Player-enemy collision (damage from touch, NO damage dealt to enemies)
     this.physics.add.overlap(
       this.player.sprite,
       this.enemies,
@@ -119,6 +130,16 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.player.move(velocity.x, velocity.y);
+    
+    // Handle attack input (spacebar)
+    if (Phaser.Input.Keyboard.JustDown(this.attackKey)) {
+      this.performAttack();
+    }
+    
+    // Update attack cooldown
+    if (this.attackCooldown > 0) {
+      this.attackCooldown -= this.game.loop.delta;
+    }
 
     // Update enemies (chase player)
     this.enemies.getChildren().forEach((enemySprite) => {
@@ -212,13 +233,10 @@ export class GameScene extends Phaser.Scene {
     const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('ref') as Enemy;
     if (!enemy) return;
     
-    // Deal damage: use enemy attack stat, player defense is applied in takeDamage
+    // Player takes damage from touching enemies (but does NOT deal damage on touch)
     this.player.takeDamage(enemy.attack);
-    
-    // Player deals damage with their attack stat
-    enemy.takeDamage(this.player.attack);
 
-    // Knockback
+    // Knockback player away from enemy
     const playerBody = (playerSprite as Phaser.Physics.Arcade.Sprite).body;
     const enemyBody = (enemySprite as Phaser.Physics.Arcade.Sprite).body;
     
@@ -245,12 +263,6 @@ export class GameScene extends Phaser.Scene {
       floor: this.currentFloor,
     });
 
-    // Check if enemy died
-    if (enemy.health <= 0) {
-      this.spawnItem(enemy.sprite.x, enemy.sprite.y);
-      enemy.destroy();
-    }
-
     // Check if player died
     if (this.player.health <= 0) {
       EventBus.emit('player-died', { pendingItems: this.pendingItems });
@@ -258,10 +270,93 @@ export class GameScene extends Phaser.Scene {
     }
   };
 
-  private spawnItem(x: number, y: number): void {
-    // Use Item.shouldDrop with limited drops per floor
-    if (Item.shouldDrop(this.dropsThisFloor, this.maxDropsPerFloor)) {
-      const item = new Item(this, x, y, this.currentFloor);
+  private performAttack(): void {
+    // Check cooldown
+    if (this.attackCooldown > 0) return;
+    
+    this.attackCooldown = this.attackCooldownTime;
+    
+    // Determine attack direction based on player facing or pointer
+    const pointer = this.input.activePointer;
+    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const angle = Phaser.Math.Angle.Between(
+      this.player.sprite.x,
+      this.player.sprite.y,
+      worldPoint.x,
+      worldPoint.y
+    );
+    
+    // Create attack slash visual
+    const attackRange = 50;
+    const attackX = this.player.sprite.x + Math.cos(angle) * 30;
+    const attackY = this.player.sprite.y + Math.sin(angle) * 30;
+    
+    const slash = this.add.sprite(attackX, attackY, 'attack_slash');
+    slash.setRotation(angle);
+    slash.setAlpha(0.8);
+    slash.setScale(1.5);
+    
+    // Animate slash
+    this.tweens.add({
+      targets: slash,
+      alpha: 0,
+      scale: 2,
+      duration: 200,
+      onComplete: () => slash.destroy(),
+    });
+    
+    // Check for enemies in attack range
+    this.enemies.getChildren().forEach((enemySprite) => {
+      const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('ref') as Enemy;
+      if (!enemy) return;
+      
+      const distance = Phaser.Math.Distance.Between(
+        this.player.sprite.x,
+        this.player.sprite.y,
+        enemy.sprite.x,
+        enemy.sprite.y
+      );
+      
+      // Check if enemy is within attack range and in the direction of attack
+      if (distance < attackRange) {
+        const enemyAngle = Phaser.Math.Angle.Between(
+          this.player.sprite.x,
+          this.player.sprite.y,
+          enemy.sprite.x,
+          enemy.sprite.y
+        );
+        
+        // Check if enemy is within 90 degree arc of attack direction
+        const angleDiff = Phaser.Math.Angle.Wrap(enemyAngle - angle);
+        if (Math.abs(angleDiff) < Math.PI / 2) {
+          // Deal damage to enemy
+          enemy.takeDamage(this.player.attack);
+          
+          // Knockback enemy
+          const knockbackForce = 150;
+          enemy.sprite.setVelocity(
+            Math.cos(enemyAngle) * knockbackForce,
+            Math.sin(enemyAngle) * knockbackForce
+          );
+          
+          // Check if enemy died
+          if (enemy.health <= 0) {
+            this.spawnItemFromEnemy(enemy);
+            enemy.destroy();
+          }
+        }
+      }
+    });
+  }
+
+  private spawnItemFromEnemy(enemy: Enemy): void {
+    // Use enemy's drop chance (based on rarity)
+    const shouldDrop = Math.random() < enemy.dropChance;
+    
+    if (shouldDrop && this.dropsThisFloor < this.maxDropsPerFloor) {
+      // Use enemy's minimum drop rarity
+      const minRarity = enemy.getMinDropRarity() as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+      const item = new Item(this, enemy.sprite.x, enemy.sprite.y, this.currentFloor, minRarity);
       this.items.add(item.sprite);
       this.dropsThisFloor++;
     }

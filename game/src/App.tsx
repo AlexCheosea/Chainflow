@@ -8,8 +8,9 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PhaserGame } from './components/PhaserGame';
 import { WalletConnect } from './components/WalletConnect';
-import { Inventory } from './components/Inventory';
+import { MainMenu } from './components/MainMenu';
 import { FloorTransitionModal } from './components/MintNotification';
+import { GameProvider, useGameContext } from './context/GameContext';
 import { networkConfig, DEFAULT_NETWORK } from './config/sui';
 import { createMintItemTransaction } from './services/itemMinting';
 import type { ItemData } from './game/entities/Item';
@@ -22,6 +23,7 @@ const queryClient = new QueryClient();
 function GameApp() {
   const account = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+  const { gameStarted, setGameStarted, equipmentBonusAttack, equipmentBonusDefense, refreshInventory } = useGameContext();
   
   // Floor transition state
   const [showFloorTransition, setShowFloorTransition] = useState(false);
@@ -30,7 +32,7 @@ function GameApp() {
   const [mintingStatus, setMintingStatus] = useState<'idle' | 'minting' | 'success' | 'error'>('idle');
   const [mintProgress, setMintProgress] = useState({ current: 0, total: 0 });
   
-  // Reference to the Phaser game for calling proceedToNextFloor
+  // Reference to the Phaser game
   const gameRef = useRef<Phaser.Game | null>(null);
 
   // Listen for floor transition events
@@ -46,20 +48,30 @@ function GameApp() {
     const handlePlayerDied = (data?: { pendingItems?: ItemData[] }) => {
       if (data?.pendingItems && data.pendingItems.length > 0) {
         setPendingItems(data.pendingItems);
+        setCurrentFloor(1);
         setShowFloorTransition(true);
         setMintingStatus('idle');
         setMintProgress({ current: 0, total: data.pendingItems.length });
+      } else {
+        // No items, go back to menu
+        setGameStarted(false);
       }
+    };
+    
+    const handleBackToMenu = () => {
+      setGameStarted(false);
     };
 
     EventBus.on('floor-transition', handleFloorTransition);
     EventBus.on('player-died', handlePlayerDied);
+    EventBus.on('back-to-menu', handleBackToMenu);
 
     return () => {
       EventBus.off('floor-transition', handleFloorTransition);
       EventBus.off('player-died', handlePlayerDied);
+      EventBus.off('back-to-menu', handleBackToMenu);
     };
-  }, []);
+  }, [setGameStarted]);
 
   const handleConfirmMint = useCallback(async () => {
     if (!account?.address || pendingItems.length === 0) {
@@ -88,12 +100,15 @@ function GameApp() {
 
     if (successCount === pendingItems.length) {
       setMintingStatus('success');
+      // Refresh inventory to show new items
+      refreshInventory();
     } else if (successCount > 0) {
-      setMintingStatus('success'); // Partial success
+      setMintingStatus('success');
+      refreshInventory();
     } else {
       setMintingStatus('error');
     }
-  }, [account?.address, pendingItems, signAndExecute]);
+  }, [account?.address, pendingItems, signAndExecute, refreshInventory]);
 
   const handleSkipOrContinue = useCallback(() => {
     setShowFloorTransition(false);
@@ -106,54 +121,33 @@ function GameApp() {
 
   const handleGameReady = useCallback((game: Phaser.Game) => {
     gameRef.current = game;
-  }, []);
+    // Pass equipment bonuses to game
+    EventBus.emit('set-equipment-bonus', { attack: equipmentBonusAttack, defense: equipmentBonusDefense });
+  }, [equipmentBonusAttack, equipmentBonusDefense]);
+
+  // Show main menu if game not started
+  if (!gameStarted) {
+    return <MainMenu />;
+  }
 
   return (
     <div className="app">
       <header className="header">
         <div className="header-left">
           <h1 className="title">⚔️ ChainFlow Roguelike</h1>
-          <span className="subtitle">NFT Loot on Sui</span>
+          <span className="subtitle">Floor {currentFloor}</span>
         </div>
         <div className="header-right">
-          <Inventory />
+          <button className="menu-btn-small" onClick={() => setGameStarted(false)}>
+            ☰ Menu
+          </button>
           <WalletConnect />
         </div>
       </header>
 
       <main className="game-wrapper">
-        {!account && (
-          <div className="connect-prompt">
-            <div className="prompt-content">
-              <h2>🎮 Connect Your Wallet</h2>
-              <p>Connect a Sui wallet to collect NFT items as you play!</p>
-              <p className="hint">You can still play without connecting, but items won't be minted.</p>
-            </div>
-          </div>
-        )}
-        
         <PhaserGame onGameReady={handleGameReady} />
       </main>
-
-      <footer className="footer">
-        <a 
-          href="https://faucet.testnet.sui.io/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-        >
-          Get Testnet SUI
-        </a>
-        <span>|</span>
-        <a 
-          href="https://suiscan.xyz/testnet" 
-          target="_blank" 
-          rel="noopener noreferrer"
-        >
-          Sui Explorer
-        </a>
-        <span>|</span>
-        <span className="network-badge">Testnet</span>
-      </footer>
 
       <FloorTransitionModal 
         visible={showFloorTransition}
@@ -173,7 +167,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networkConfig} defaultNetwork={DEFAULT_NETWORK}>
         <WalletProvider autoConnect>
-          <GameApp />
+          <GameProvider>
+            <GameApp />
+          </GameProvider>
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>

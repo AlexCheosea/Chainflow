@@ -48,14 +48,16 @@ const RARITY_COLORS = {
 const BASE_DROP_CHANCE = 0.20;
 const DROP_CHANCE_DECAY = 0.5; // Each drop reduces chance by 50%
 
+const RARITY_ORDER: ItemData['rarity'][] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
 export class Item {
   public sprite: Phaser.Physics.Arcade.Sprite;
   private itemData: ItemData;
   private floor: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, floor: number = 1) {
+  constructor(scene: Phaser.Scene, x: number, y: number, floor: number = 1, minRarity: ItemData['rarity'] = 'common') {
     this.floor = floor;
-    this.itemData = this.generateItemData();
+    this.itemData = this.generateItemData(minRarity);
     
     // Use weapon or armor texture based on type
     const textureKey = this.itemData.itemType === 'weapon' ? 'item_weapon' : 'item_armor';
@@ -74,8 +76,10 @@ export class Item {
     });
   }
 
-  private generateItemData(): ItemData {
-    // Roll for rarity
+  private generateItemData(minRarity: ItemData['rarity']): ItemData {
+    // Roll for rarity (but ensure it's at least minRarity)
+    const minIndex = RARITY_ORDER.indexOf(minRarity);
+    
     const roll = Math.random() * 100;
     let cumulative = 0;
     let rarity: ItemData['rarity'] = 'common';
@@ -86,6 +90,12 @@ export class Item {
         rarity = r;
         break;
       }
+    }
+    
+    // Ensure minimum rarity
+    const rolledIndex = RARITY_ORDER.indexOf(rarity);
+    if (rolledIndex < minIndex) {
+      rarity = minRarity;
     }
 
     // Randomly choose weapon or armor

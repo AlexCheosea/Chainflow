@@ -65,7 +65,7 @@ export class UIScene extends Phaser.Scene {
     EventBus.on('item-collected', this.onItemCollected, this);
 
     // Instructions
-    this.add.text(400, 580, 'WASD or Arrow Keys to move | Defeat all enemies to open the gate!', {
+    this.add.text(400, 580, 'WASD/Arrows: Move | Space/Click: Attack | Defeat all enemies for gate!', {
       fontSize: '12px',
       color: '#888888',
       fontFamily: 'monospace',
