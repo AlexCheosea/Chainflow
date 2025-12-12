@@ -16,7 +16,7 @@ Rarities:
 
 Marketplace ----------
 The store has a list of standard items (basic and uncommon) that you can buy to advance but some items can be found only by playing
-You can buy different new parts of the game : weapons, outfits (with stats), maps, campaigns(maybe you like the mechanics but you would like to see different stories)
+You can buy different new parts of the game : weapons, outfits (with stats)
 
 Each player should have a list of items that are set for selling.
 
@@ -26,6 +26,8 @@ Items filter
 Pitch for future -----------
 
 chats for players to communicate
+ maps, campaigns(maybe you like the mechanics but you would like to see different stories)
+sacrifice(not humans, but nfts for posibble higher rewards)
 
 
 contract2:
