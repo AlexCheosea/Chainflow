@@ -181,7 +181,7 @@ export async function generateNFTImage(
  * @returns The blob ID for retrieval
  */
 export async function uploadToWalrus(blob: Blob): Promise<string> {
-  const uploadUrl = `${WALRUS_PUBLISHER_URL}/v1/store?epochs=5`;
+  const uploadUrl = `${WALRUS_PUBLISHER_URL}/v1/blobs?epochs=5`;
   console.log('[Walrus] Uploading to:', uploadUrl);
   
   try {
@@ -221,7 +221,7 @@ export async function uploadToWalrus(blob: Blob): Promise<string> {
  * @returns The URL to fetch the blob
  */
 export function getWalrusUrl(blobId: string): string {
-  return `${WALRUS_AGGREGATOR_URL}/v1/${blobId}`;
+  return `${WALRUS_AGGREGATOR_URL}/v1/blobs/${blobId}`;
 }
 
 /**
