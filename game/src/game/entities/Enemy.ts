@@ -29,7 +29,7 @@ export class Enemy {
   public dropChance: number;
   private speed: number;
   private healthBar: Phaser.GameObjects.Graphics;
-  private rarityLabel: Phaser.GameObjects.Text;
+  
 
   constructor(scene: Phaser.Scene, x: number, y: number, floor: number = 1, rarity?: EnemyRarity) {
     // Determine rarity (use provided or roll random)
@@ -55,25 +55,7 @@ export class Enemy {
     // Create health bar
     this.healthBar = scene.add.graphics();
     
-    // Add rarity label for non-normal enemies
-    const rarityColors: Record<EnemyRarity, string> = {
-      normal: '#888888',
-      uncommon: '#00ff00',
-      rare: '#0088ff',
-      epic: '#aa00ff',
-      legendary: '#ffaa00',
-    };
-    
-    this.rarityLabel = scene.add.text(x, y - 32, '', {
-      fontSize: '10px',
-      color: rarityColors[this.rarity],
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5);
-    
-    if (this.rarity !== 'normal') {
-      this.rarityLabel.setText(this.rarity.toUpperCase());
-    }
+    // Rarity label removed: rarity is no longer displayed above enemies
     
     this.updateHealthBar();
   }
@@ -113,8 +95,8 @@ export class Enemy {
       playerY
     );
 
-    // Only chase if within range (reduced stopping distance from 20 to 5 for better collision)
-    if (distance < 200 && distance > 10) {
+    // Only chase if within range (reduced stopping distance from 20 to 10 for better collision)
+    if (distance < 250 && distance > 10) {
       const angle = Phaser.Math.Angle.Between(
         this.sprite.x,
         this.sprite.y,
@@ -132,7 +114,7 @@ export class Enemy {
     
     // Update health bar and label positions
     this.updateHealthBar();
-    this.rarityLabel.setPosition(this.sprite.x, this.sprite.y - 32);
+    
   }
 
   private updateHealthBar(): void {
@@ -175,7 +157,6 @@ export class Enemy {
     this.sprite.scene.sound.play('enemyKilled', { volume: 0.5 });
 
     this.healthBar.destroy();
-    this.rarityLabel.destroy();
     this.sprite.destroy();
   }
 }
