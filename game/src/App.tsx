@@ -12,7 +12,7 @@ import { MainMenu } from './components/MainMenu';
 import { FloorTransitionModal } from './components/MintNotification';
 import { GameProvider, useGameContext } from './context/GameContext';
 import { networkConfig, DEFAULT_NETWORK } from './config/sui';
-import { createMintItemTransaction } from './services/itemMinting';
+import { createBatchMintTransaction } from './services/itemMinting';
 import type { ItemData } from './game/entities/Item';
 import { EventBus } from './game/EventBus';
 import '@mysten/dapp-kit/dist/index.css';
@@ -27,6 +27,7 @@ function GameApp() {
   
   // Floor transition state
   const [showFloorTransition, setShowFloorTransition] = useState(false);
+  const [showDeathModal, setShowDeathModal] = useState(false);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [pendingItems, setPendingItems] = useState<ItemData[]>([]);
   const [mintingStatus, setMintingStatus] = useState<'idle' | 'minting' | 'success' | 'error'>('idle');
@@ -53,8 +54,8 @@ function GameApp() {
         setMintingStatus('idle');
         setMintProgress({ current: 0, total: data.pendingItems.length });
       } else {
-        // No items, go back to menu
-        setGameStarted(false);
+        // No items, show death modal
+        setShowDeathModal(true);
       }
     };
     
@@ -73,49 +74,41 @@ function GameApp() {
     };
   }, [setGameStarted]);
 
-  const handleConfirmMint = useCallback(async () => {
-    if (!account?.address || pendingItems.length === 0) {
+  const handleConfirmMint = useCallback(async (selectedItems: ItemData[]) => {
+    if (!account?.address || selectedItems.length === 0) {
       return;
     }
 
     setMintingStatus('minting');
-    let successCount = 0;
+    setMintProgress({ current: 0, total: selectedItems.length });
 
-    for (let i = 0; i < pendingItems.length; i++) {
-      const item = pendingItems[i];
-      setMintProgress({ current: i + 1, total: pendingItems.length });
+    try {
+      // Create a single batch transaction for all selected items
+      const tx = createBatchMintTransaction({
+        items: selectedItems,
+        recipientAddress: account.address,
+      });
 
-      try {
-        const tx = createMintItemTransaction({
-          item,
-          recipientAddress: account.address,
-        });
-
-        await signAndExecute({ transaction: tx });
-        successCount++;
-      } catch (error) {
-        console.error(`Failed to mint item ${item.name}:`, error);
-      }
-    }
-
-    if (successCount === pendingItems.length) {
+      // Single wallet approval for all items
+      await signAndExecute({ transaction: tx });
+      
+      setMintProgress({ current: selectedItems.length, total: selectedItems.length });
       setMintingStatus('success');
       // Refresh inventory to show new items
       refreshInventory();
-    } else if (successCount > 0) {
-      setMintingStatus('success');
-      refreshInventory();
-    } else {
+    } catch (error) {
+      console.error('Failed to mint items:', error);
       setMintingStatus('error');
     }
-  }, [account?.address, pendingItems, signAndExecute, refreshInventory]);
+  }, [account?.address, signAndExecute, refreshInventory]);
 
   const handleSkipOrContinue = useCallback(() => {
     setShowFloorTransition(false);
     setPendingItems([]);
     setMintingStatus('idle');
     
-    // Tell the game to proceed to next floor
+    // Update to next floor and tell the game to proceed
+    setCurrentFloor(prev => prev + 1);
     EventBus.emit('proceed-to-next-floor');
   }, []);
 
@@ -158,6 +151,21 @@ function GameApp() {
         onConfirmMint={handleConfirmMint}
         onSkip={handleSkipOrContinue}
       />
+
+      {showDeathModal && (
+        <div className="death-modal-overlay">
+          <div className="death-modal">
+            <h2 className="death-title">You Died</h2>
+            <p className="death-subtitle">Better luck next time!</p>
+            <button 
+              className="death-btn" 
+              onClick={() => window.location.reload()}
+            >
+              Return to Main Menu
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

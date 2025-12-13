@@ -113,8 +113,8 @@ export class Enemy {
       playerY
     );
 
-    // Only chase if within range
-    if (distance < 200 && distance > 20) {
+    // Only chase if within range (reduced stopping distance from 20 to 5 for better collision)
+    if (distance < 200 && distance > 10) {
       const angle = Phaser.Math.Angle.Between(
         this.sprite.x,
         this.sprite.y,
@@ -171,6 +171,9 @@ export class Enemy {
   }
 
   destroy(): void {
+    // Play enemy killed sound (lower volume to balance with music)
+    this.sprite.scene.sound.play('enemyKilled', { volume: 0.5 });
+
     this.healthBar.destroy();
     this.rarityLabel.destroy();
     this.sprite.destroy();

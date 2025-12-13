@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { fetchOwnedItems, type OwnedItem } from '../services/itemMinting';
 import './Inventory.css';
@@ -11,11 +11,37 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: '#ffaa00',
 };
 
+const RARITY_ORDER: Record<string, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+};
+
+type SortOption = 'attack' | 'defense' | 'rarity';
+
 export function Inventory() {
   const account = useCurrentAccount();
   const [items, setItems] = useState<OwnedItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('rarity');
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      switch (sortBy) {
+        case 'attack':
+          return b.attack - a.attack;
+        case 'defense':
+          return b.defense - a.defense;
+        case 'rarity':
+          return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [items, sortBy]);
 
   const loadItems = useCallback(async () => {
     if (!account?.address) return;
@@ -58,6 +84,28 @@ export function Inventory() {
               {loading ? '...' : '🔄'}
             </button>
           </div>
+
+          <div className="sort-controls">
+            <span className="sort-label">Sort by:</span>
+            <button 
+              className={`sort-btn ${sortBy === 'attack' ? 'active' : ''}`}
+              onClick={() => setSortBy('attack')}
+            >
+              ⚔️ Attack
+            </button>
+            <button 
+              className={`sort-btn ${sortBy === 'defense' ? 'active' : ''}`}
+              onClick={() => setSortBy('defense')}
+            >
+              🛡️ Defense
+            </button>
+            <button 
+              className={`sort-btn ${sortBy === 'rarity' ? 'active' : ''}`}
+              onClick={() => setSortBy('rarity')}
+            >
+              ✨ Rarity
+            </button>
+          </div>
           
           {items.length === 0 ? (
             <div className="inventory-empty">
@@ -66,7 +114,7 @@ export function Inventory() {
             </div>
           ) : (
             <div className="inventory-grid">
-              {items.map((item) => (
+              {sortedItems.map((item) => (
                 <div 
                   key={item.id} 
                   className="inventory-item"

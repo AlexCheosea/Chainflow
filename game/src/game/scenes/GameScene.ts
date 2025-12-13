@@ -30,17 +30,38 @@ export class GameScene extends Phaser.Scene {
   private attackCooldownTime: number = 400; // ms between attacks
   private attackRange: number = 70; // Increased attack range
 
+  // Background music
+  private backgroundMusic: Phaser.Sound.BaseSound | null = null;
+
   constructor() {
     super({ key: 'GameScene' });
   }
 
   init(data?: { floor?: number; pendingItems?: ItemData[] }): void {
+    // Stop previous background music if it exists
+    if (this.backgroundMusic) {
+      this.backgroundMusic.stop();
+      this.backgroundMusic = null;
+    }
+
     // Initialize or continue floor
     this.currentFloor = data?.floor ?? 1;
     this.pendingItems = data?.pendingItems ?? [];
     this.dropsThisFloor = 0;
     this.gateSpawned = false;
     this.gate = null;
+  }
+
+  preload(): void {
+    // Preload audio files with .ogg extension (file names have spaces)
+    this.load.audio('swordSlice1', 'assets/sounds/sword slice.ogg');
+    this.load.audio('swordSlice2', 'assets/sounds/sword slice 2.ogg');
+    this.load.audio('swordHit', 'assets/sounds/sword hit.ogg');
+    this.load.audio('playerHurt', 'assets/sounds/Player hurt.ogg');
+    this.load.audio('enemyKilled', 'assets/sounds/Enemy killed.ogg');
+    this.load.audio('music1', 'assets/sounds/Music1.ogg');
+    this.load.audio('music2', 'assets/sounds/Music2.ogg');
+    this.load.audio('music3', 'assets/sounds/Music3.ogg');
   }
 
   create(): void {
@@ -130,9 +151,17 @@ export class GameScene extends Phaser.Scene {
         floor: this.currentFloor,
       });
     });
+
+    // Play background music based on the current floor (use modulo for floors > 3)
+    const musicIndex = ((this.currentFloor - 1) % 3) + 1;
+    const musicKey = `music${musicIndex}`;
+    if (this.cache.audio.exists(musicKey)) {
+      this.backgroundMusic = this.sound.add(musicKey, { loop: true, volume: 0.8 });
+      this.backgroundMusic.play();
+    }
   }
 
-  update(): void {
+  update(time: number, delta: number): void {
     // Handle player movement
     const velocity = { x: 0, y: 0 };
     const speed = 150;
@@ -173,6 +202,14 @@ export class GameScene extends Phaser.Scene {
     // Check if all enemies defeated - spawn gate
     if (!this.gateSpawned && this.enemies.countActive() === 0) {
       this.spawnGate();
+    }
+
+    // Ensure music changes when the floor changes
+    if (this.backgroundMusic && this.currentFloorChanged()) {
+      this.backgroundMusic.stop();
+      const newMusicKey = `music${this.currentFloor}`;
+      this.backgroundMusic = this.sound.add(newMusicKey, { loop: true });
+      this.backgroundMusic.play();
     }
   }
 
@@ -357,6 +394,9 @@ export class GameScene extends Phaser.Scene {
         // Check if enemy is within 90 degree arc of attack direction
         const angleDiff = Phaser.Math.Angle.Wrap(enemyAngle - angle);
         if (Math.abs(angleDiff) < Math.PI / 2) {
+          // Play sword hit sound
+          this.sound.play('swordHit', { volume: 0.4 });
+          
           // Deal damage to enemy
           enemy.takeDamage(this.player.attack);
           
@@ -419,7 +459,11 @@ export class GameScene extends Phaser.Scene {
     });
     
     // Emit item collected event (for UI notification, not minting yet)
-    EventBus.emit('item-collected', itemData);
+    EventBus.emit('item-collected', {
+      ...itemData,
+      playerX: this.player.sprite.x,
+      playerY: this.player.sprite.y,
+    });
     
     item.destroy();
   };
@@ -442,5 +486,11 @@ export class GameScene extends Phaser.Scene {
 
   public restartGame(): void {
     this.scene.restart({ floor: 1, pendingItems: [] });
+  }
+
+  private currentFloorChanged(): boolean {
+    // Logic to detect if the floor has changed
+    // Placeholder: Replace with actual floor change detection logic
+    return false;
   }
 }

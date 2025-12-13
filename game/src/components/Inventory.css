@@ -25,7 +25,7 @@
   right: 0;
   margin-top: 8px;
   width: 320px;
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   background: rgba(26, 26, 46, 0.95);
   border: 1px solid #4a4a6a;
@@ -109,4 +109,41 @@
 
 .defense {
   color: #6699ff;
+}
+
+/* Sort Controls */
+.sort-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  color: #888;
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.sort-btn {
+  padding: 6px 10px;
+  background: rgba(60, 60, 100, 0.6);
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  color: #aaa;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  background: rgba(80, 80, 120, 0.8);
+  color: #fff;
+}
+
+.sort-btn.active {
+  background: rgba(0, 100, 200, 0.5);
+  border-color: #0088ff;
+  color: #fff;
 }

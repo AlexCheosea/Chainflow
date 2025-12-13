@@ -94,6 +94,11 @@ export class Player {
     }
 
     this.isAttacking = true;
+
+    // Play sword slice sound (lower volume to balance with music)
+    const sliceSound = Math.random() > 0.5 ? 'swordSlice1' : 'swordSlice2';
+    this.sprite.scene.sound.play(sliceSound, { volume: 0.4 });
+
     const animKey = `attack_${this.facing}`;
     this.sprite.play(animKey);
 
@@ -116,9 +121,12 @@ export class Player {
     if (now - this.lastDamageTime < this.damageCooldown) {
       return;
     }
-    
+
     this.lastDamageTime = now;
-    
+
+    // Play player hurt sound
+    this.sprite.scene.sound.play('playerHurt');
+
     // Apply defense: actual damage = incoming damage - defense (minimum 1)
     const actualDamage = Math.max(1, incomingDamage - this.defense);
     this.health = Math.max(0, this.health - actualDamage);

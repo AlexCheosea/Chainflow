@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useGameContext, getItemSlotType } from '../context/GameContext';
 import { WalletConnect } from './WalletConnect';
@@ -13,6 +13,16 @@ const RARITY_COLORS: Record<string, string> = {
   epic: '#aa00ff',
   legendary: '#ffaa00',
 };
+
+const RARITY_ORDER: Record<string, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+};
+
+type SortOption = 'attack' | 'defense' | 'rarity';
 
 export function MainMenu() {
   const account = useCurrentAccount();
@@ -29,6 +39,22 @@ export function MainMenu() {
   } = useGameContext();
   
   const [showInventory, setShowInventory] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('rarity');
+
+  const sortedItems = useMemo(() => {
+    return [...ownedItems].sort((a, b) => {
+      switch (sortBy) {
+        case 'attack':
+          return b.attack - a.attack;
+        case 'defense':
+          return b.defense - a.defense;
+        case 'rarity':
+          return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [ownedItems, sortBy]);
 
   const isEquipped = (item: OwnedItem) => 
     equipment.weapon?.id === item.id || equipment.armor?.id === item.id;
@@ -167,13 +193,27 @@ export function MainMenu() {
             <div className="inventory-section">
               <div className="inventory-header">
                 <h3>📦 Your NFT Items</h3>
-                <button 
-                  className="refresh-btn"
-                  onClick={refreshInventory}
-                  disabled={loadingItems}
-                >
-                  {loadingItems ? '...' : '🔄'}
-                </button>
+                <div className="sort-controls">
+                  <span className="sort-label">Sort by:</span>
+                  <button 
+                    className={`sort-btn ${sortBy === 'attack' ? 'active' : ''}`}
+                    onClick={() => setSortBy('attack')}
+                  >
+                    ⚔️ Attack
+                  </button>
+                  <button 
+                    className={`sort-btn ${sortBy === 'defense' ? 'active' : ''}`}
+                    onClick={() => setSortBy('defense')}
+                  >
+                    🛡️ Defense
+                  </button>
+                  <button 
+                    className={`sort-btn ${sortBy === 'rarity' ? 'active' : ''}`}
+                    onClick={() => setSortBy('rarity')}
+                  >
+                    ✨ Rarity
+                  </button>
+                </div>
               </div>
               
               {loadingItems ? (
@@ -182,7 +222,7 @@ export function MainMenu() {
                 <p className="no-items">No items yet. Play to collect NFT loot!</p>
               ) : (
                 <div className="items-grid">
-                  {ownedItems.map(item => (
+                  {sortedItems.map(item => (
                     <div 
                       key={item.id} 
                       className={`item-card ${isEquipped(item) ? 'equipped' : ''}`}

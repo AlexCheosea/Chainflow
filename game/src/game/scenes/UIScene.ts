@@ -4,7 +4,6 @@ import { EventBus } from '../EventBus';
 export class UIScene extends Phaser.Scene {
   private healthText!: Phaser.GameObjects.Text;
   private healthBar!: Phaser.GameObjects.Graphics;
-  private floorText!: Phaser.GameObjects.Text;
   private statsText!: Phaser.GameObjects.Text;
   private gateNotification!: Phaser.GameObjects.Text;
 
@@ -13,14 +12,6 @@ export class UIScene extends Phaser.Scene {
   }
 
   create(data?: { floor?: number }): void {
-    // Floor indicator
-    this.floorText = this.add.text(400, 15, `Floor ${data?.floor ?? 1}`, {
-      fontSize: '18px',
-      color: '#ffffff',
-      fontFamily: 'monospace',
-      fontStyle: 'bold',
-    }).setOrigin(0.5).setScrollFactor(0);
-
     // Health bar background
     this.add.rectangle(120, 40, 200, 20, 0x333333).setScrollFactor(0);
     
@@ -43,8 +34,8 @@ export class UIScene extends Phaser.Scene {
       fontFamily: 'monospace',
     }).setScrollFactor(0);
 
-    // Gate notification (hidden initially)
-    this.gateNotification = this.add.text(400, 550, '🌀 Gate opened! Find the portal to proceed!', {
+    // Gate notification (hidden initially) - centered at half of game width (1000/2 = 500)
+    this.gateNotification = this.add.text(500, 550, '🌀 Gate opened! Find the portal to proceed!', {
       fontSize: '16px',
       color: '#00aaff',
       fontFamily: 'monospace',
@@ -86,10 +77,6 @@ export class UIScene extends Phaser.Scene {
       if (data.attack !== undefined && data.defense !== undefined && this.statsText) {
         this.statsText.setText(`⚔️ ${data.attack}  🛡️ ${data.defense}`);
       }
-      
-      if (data.floor !== undefined && this.floorText) {
-        this.floorText.setText(`Floor ${data.floor}`);
-      }
     } catch (error) {
       // Silently catch any errors during UI updates (race conditions with scene destruction)
       console.warn('UIScene update error (likely scene transition):', error);
@@ -115,12 +102,12 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  private onItemCollected(item: { name: string; rarity: string }): void {
+  private onItemCollected(item: { name: string; rarity: string; playerX: number; playerY: number }): void {
     // Check if scene is still active
     if (!this.sys || !this.sys.isActive()) return;
     
     try {
-      // Show brief item pickup notification
+      // Show brief item pickup notification above the player
       const rarityColors: Record<string, string> = {
         common: '#aaaaaa',
         uncommon: '#00ff00',
@@ -129,17 +116,18 @@ export class UIScene extends Phaser.Scene {
         legendary: '#ffaa00',
       };
       
-      const notification = this.add.text(400, 100, `+ ${item.name}`, {
+      // Position 50px above the player (in world coordinates, not UI)
+      const notification = this.add.text(item.playerX, item.playerY - 50, `+ ${item.name}`, {
         fontSize: '16px',
         color: rarityColors[item.rarity] || '#ffffff',
         fontFamily: 'monospace',
         fontStyle: 'bold',
-      }).setOrigin(0.5).setScrollFactor(0);
+      }).setOrigin(0.5);
       
       // Float up and fade out
       this.tweens.add({
         targets: notification,
-        y: 60,
+        y: item.playerY - 100,
         alpha: 0,
         duration: 1500,
         onComplete: () => notification.destroy(),
@@ -149,44 +137,12 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  private onPlayerDied(data?: { pendingItems?: unknown[] }): void {
-    const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
-    overlay.setScrollFactor(0);
-
-    this.add.text(400, 220, 'YOU DIED', {
-      fontSize: '48px',
-      color: '#ff0000',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5).setScrollFactor(0);
-
-    const itemCount = data?.pendingItems?.length ?? 0;
-    const itemMessage = itemCount > 0 
-      ? `You collected ${itemCount} item${itemCount > 1 ? 's' : ''} this run!`
-      : 'No items collected this run.';
-
-    this.add.text(400, 290, itemMessage, {
-      fontSize: '16px',
-      color: '#ffffff',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5).setScrollFactor(0);
-
-    this.add.text(400, 330, 'Items will be minted to your wallet.', {
-      fontSize: '14px',
-      color: '#aaaaaa',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5).setScrollFactor(0);
-
-    const restartButton = this.add.text(400, 400, '[ RESTART ]', {
-      fontSize: '24px',
-      color: '#00ff00',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5).setScrollFactor(0).setInteractive();
-
-    restartButton.on('pointerover', () => restartButton.setColor('#88ff88'));
-    restartButton.on('pointerout', () => restartButton.setColor('#00ff00'));
-    restartButton.on('pointerdown', () => {
-      EventBus.emit('restart-game');
-    });
+  private onPlayerDied(_data?: { pendingItems?: unknown[] }): void {
+    // Death is now handled by React modal in App.tsx
+    // Just stop the UIScene to prevent any further updates
+    if (this.sys && this.sys.isActive()) {
+      this.scene.stop();
+    }
   }
 
   shutdown(): void {

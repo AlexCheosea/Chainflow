@@ -53,6 +53,74 @@
   border: 2px solid;
   display: flex;
   gap: 12px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.pending-item-card.selectable {
+  cursor: pointer;
+}
+
+.pending-item-card.selectable:hover {
+  transform: scale(1.02);
+  background: rgba(0, 100, 255, 0.1);
+}
+
+.pending-item-card.selected {
+  background: rgba(0, 170, 0, 0.2);
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.3);
+}
+
+.item-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #666;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: #00ff00;
+  background: rgba(0, 0, 0, 0.5);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.item-checkbox.checked {
+  background: rgba(0, 170, 0, 0.5);
+  border-color: #00ff00;
+}
+
+.selection-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.select-btn {
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  padding: 8px 16px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.select-btn:hover {
+  color: #fff;
+  border-color: #666;
+}
+
+.selection-count {
+  color: #aaa;
+  font-size: 14px;
 }
 
 .item-preview {
@@ -117,12 +185,18 @@
   font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
 }
 
-.mint-confirm-btn:hover {
+.mint-confirm-btn:hover:not(:disabled) {
   transform: scale(1.05);
   box-shadow: 0 4px 16px rgba(0, 170, 0, 0.4);
+}
+
+.mint-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #666 0%, #444 100%);
 }
 
 .skip-btn {

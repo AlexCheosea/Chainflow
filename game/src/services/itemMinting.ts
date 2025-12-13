@@ -13,6 +13,11 @@ export interface MintItemParams {
   recipientAddress: string;
 }
 
+export interface BatchMintParams {
+  items: ItemData[];
+  recipientAddress: string;
+}
+
 /**
  * Creates a transaction to mint an item NFT
  */
@@ -39,6 +44,40 @@ export function createMintItemTransaction(params: MintItemParams): Transaction {
       tx.pure.address(recipientAddress),
     ],
   });
+  
+  return tx;
+}
+
+/**
+ * Creates a single transaction to mint multiple item NFTs at once
+ * This allows all items to be minted with a single wallet approval
+ */
+export function createBatchMintTransaction(params: BatchMintParams): Transaction {
+  const { items, recipientAddress } = params;
+  
+  const tx = new Transaction();
+  
+  // Add a mint call for each item in the batch
+  for (const item of items) {
+    // Create a name that includes floor information
+    const displayName = `${item.name} (Floor ${item.floorObtained})`;
+    
+    // Create a detailed description
+    const description = `A ${item.rarity} ${item.itemType} found on floor ${item.floorObtained}. ⚔️ Attack: ${item.attack} | 🛡️ Defense: ${item.defense}`;
+    
+    tx.moveCall({
+      target: `${CONTRACT_CONFIG.packageId}::${CONTRACT_CONFIG.module}::${CONTRACT_CONFIG.mintFunction}`,
+      arguments: [
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(displayName))),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(item.rarity))),
+        tx.pure.u64(item.attack),
+        tx.pure.u64(item.defense),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(description))),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(getItemImageUrl(item)))),
+        tx.pure.address(recipientAddress),
+      ],
+    });
+  }
   
   return tx;
 }

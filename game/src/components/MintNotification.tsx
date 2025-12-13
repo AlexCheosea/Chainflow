@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { ItemData } from '../game/entities/Item';
 import './MintNotification.css';
 
@@ -8,7 +8,7 @@ interface FloorTransitionProps {
   pendingItems: ItemData[];
   mintingStatus: 'idle' | 'minting' | 'success' | 'error';
   mintProgress: { current: number; total: number };
-  onConfirmMint: () => void;
+  onConfirmMint: (selectedItems: ItemData[]) => void;
   onSkip: () => void;
 }
 
@@ -34,6 +34,35 @@ export function FloorTransitionModal({
   onConfirmMint, 
   onSkip 
 }: FloorTransitionProps) {
+  // Track selected items by their index
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+
+  // Reset selection when modal becomes visible with new items
+  const toggleItemSelection = useCallback((index: number) => {
+    setSelectedIndices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIndices(new Set(pendingItems.map((_, i) => i)));
+  }, [pendingItems]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedIndices(new Set());
+  }, []);
+
+  const handleMintSelected = useCallback(() => {
+    const selectedItems = pendingItems.filter((_, i) => selectedIndices.has(i));
+    onConfirmMint(selectedItems);
+  }, [pendingItems, selectedIndices, onConfirmMint]);
+
   const getItemImage = useCallback((item: ItemData) => {
     // Generate a simple SVG preview based on item type and rarity
     const color = RARITY_COLORS[item.rarity] || '#ffffff';
@@ -73,44 +102,70 @@ export function FloorTransitionModal({
         
         {pendingItems.length > 0 ? (
           <>
-            <p className="floor-subtitle">You found {pendingItems.length} item{pendingItems.length > 1 ? 's' : ''}!</p>
+            <p className="floor-subtitle">
+              You found {pendingItems.length} item{pendingItems.length > 1 ? 's' : ''}! 
+              Select items to mint as NFTs.
+            </p>
+            
+            {mintingStatus === 'idle' && (
+              <div className="selection-controls">
+                <button className="select-btn" onClick={selectAll}>Select All</button>
+                <button className="select-btn" onClick={deselectAll}>Deselect All</button>
+                <span className="selection-count">
+                  {selectedIndices.size} of {pendingItems.length} selected
+                </span>
+              </div>
+            )}
             
             <div className="pending-items-grid">
-              {pendingItems.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="pending-item-card"
-                  style={{ borderColor: RARITY_COLORS[item.rarity] }}
-                >
-                  <div className="item-preview">
-                    <img 
-                      src={getItemImage(item)} 
-                      alt={item.name}
-                      className="item-preview-image"
-                    />
-                  </div>
-                  <div className="item-info">
-                    <div 
-                      className="item-name-preview"
-                      style={{ color: RARITY_COLORS[item.rarity] }}
-                    >
-                      {ITEM_TYPE_ICONS[item.itemType]} {item.name}
+              {pendingItems.map((item, index) => {
+                const isSelected = selectedIndices.has(index);
+                return (
+                  <div 
+                    key={index} 
+                    className={`pending-item-card ${isSelected ? 'selected' : ''} ${mintingStatus === 'idle' ? 'selectable' : ''}`}
+                    style={{ borderColor: RARITY_COLORS[item.rarity] }}
+                    onClick={() => mintingStatus === 'idle' && toggleItemSelection(index)}
+                  >
+                    {mintingStatus === 'idle' && (
+                      <div className={`item-checkbox ${isSelected ? 'checked' : ''}`}>
+                        {isSelected ? '✓' : ''}
+                      </div>
+                    )}
+                    <div className="item-preview">
+                      <img 
+                        src={getItemImage(item)} 
+                        alt={item.name}
+                        className="item-preview-image"
+                      />
                     </div>
-                    <div className="item-rarity">{item.rarity.toUpperCase()}</div>
-                    <div className="item-stats-preview">
-                      <span className="stat">⚔️ {item.attack}</span>
-                      <span className="stat">🛡️ {item.defense}</span>
+                    <div className="item-info">
+                      <div 
+                        className="item-name-preview"
+                        style={{ color: RARITY_COLORS[item.rarity] }}
+                      >
+                        {ITEM_TYPE_ICONS[item.itemType]} {item.name}
+                      </div>
+                      <div className="item-rarity">{item.rarity.toUpperCase()}</div>
+                      <div className="item-stats-preview">
+                        <span className="stat">⚔️ {item.attack}</span>
+                        <span className="stat">🛡️ {item.defense}</span>
+                      </div>
+                      <div className="item-floor">Floor {item.floorObtained}</div>
                     </div>
-                    <div className="item-floor">Floor {item.floorObtained}</div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {mintingStatus === 'idle' && (
               <div className="floor-actions">
-                <button className="mint-confirm-btn" onClick={onConfirmMint}>
-                  ✓ Mint All NFTs
+                <button 
+                  className="mint-confirm-btn" 
+                  onClick={handleMintSelected}
+                  disabled={selectedIndices.size === 0}
+                >
+                  ✓ Mint Selected ({selectedIndices.size})
                 </button>
                 <button className="skip-btn" onClick={onSkip}>
                   Skip (items will not be saved)
@@ -128,7 +183,7 @@ export function FloorTransitionModal({
             {mintingStatus === 'success' && (
               <div className="mint-success">
                 <div className="success-icon">✓</div>
-                <p>All items minted successfully!</p>
+                <p>Items minted successfully!</p>
                 <button className="continue-btn" onClick={onSkip}>
                   Continue to Floor {floor + 1}
                 </button>
@@ -140,7 +195,7 @@ export function FloorTransitionModal({
                 <div className="error-icon">✗</div>
                 <p>Some items failed to mint. Check your wallet connection.</p>
                 <div className="floor-actions">
-                  <button className="mint-confirm-btn" onClick={onConfirmMint}>
+                  <button className="mint-confirm-btn" onClick={handleMintSelected}>
                     Retry
                   </button>
                   <button className="skip-btn" onClick={onSkip}>

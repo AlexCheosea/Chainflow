@@ -46,8 +46,9 @@ body {
 }
 
 .subtitle {
-  font-size: 14px;
-  color: #888;
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: bold;
 }
 
 .header-right {
@@ -163,4 +164,60 @@ button[class*="connect"] {
   border: none !important;
   color: #000 !important;
   font-weight: bold !important;
+}
+
+/* Death Modal */
+.death-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.death-modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2a1a1a 100%);
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 2px solid #ff3333;
+}
+
+.death-title {
+  color: #ff3333;
+  font-size: 48px;
+  margin: 0 0 16px 0;
+  font-family: monospace;
+  font-weight: bold;
+  text-shadow: 0 0 20px rgba(255, 50, 50, 0.5);
+}
+
+.death-subtitle {
+  color: #888;
+  font-size: 18px;
+  margin: 0 0 32px 0;
+}
+
+.death-btn {
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #cc2222 0%, #aa0000 100%);
+  border: 2px solid #ff4444;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.death-btn:hover {
+  background: linear-gradient(135deg, #ff3333 0%, #cc0000 100%);
+  border-color: #ff6666;
+  transform: scale(1.05);
 }
