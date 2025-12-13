@@ -190,19 +190,6 @@
   font-family: monospace;
 }
 
-/* Listed badge */
-.listed-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #ff8800;
-  color: #fff;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-family: monospace;
-}
 
 /* Listed price label */
 .listed-price-label {

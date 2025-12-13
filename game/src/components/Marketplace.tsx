@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { normalizeSuiAddress } from '@mysten/sui/utils';
 import { useGameContext } from '../context/GameContext';
@@ -14,6 +14,7 @@ import {
   type MarketplaceListing,
   type PremadeItem,
 } from '../services/marketplace';
+import { type OwnedItem } from '../services/itemMinting';
 import './Marketplace.css';
 
 // Rarity colors matching the game
@@ -24,6 +25,17 @@ const RARITY_COLORS: Record<string, string> = {
   epic: '#aa00ff',
   legendary: '#ffaa00',
 };
+
+const RARITY_ORDER: Record<string, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+};
+
+type MySortOption = 'attack' | 'defense' | 'rarity';
+type MarketSortOption = 'attack' | 'defense' | 'rarity' | 'price';
 
 type TabType = 'my-listings' | 'shop' | 'market';
 
@@ -42,6 +54,9 @@ export function Marketplace({ onBack }: MarketplaceProps) {
   const [listingPrice, setListingPrice] = useState<Record<string, string>>({});
   const [transactionStatus, setTransactionStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+  const [mySortBy, setMySortBy] = useState<MySortOption>('rarity');
+  const [marketSortBy, setMarketSortBy] = useState<MarketSortOption>('rarity');
+  const [showListed, setShowListed] = useState<boolean>(true);
 
   // Premade items from the shop
   const premadeItems = getPremadeItems();
@@ -79,6 +94,69 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     const normalizedSeller = normalizeSuiAddress(l.seller);
     return normalizedSeller !== normalizedUserAddress;
   });
+
+  const sortedMyListings = useMemo(() => {
+    return [...myListings].sort((a, b) => {
+      switch (mySortBy) {
+        case 'attack':
+          return b.attack - a.attack;
+        case 'defense':
+          return b.defense - a.defense;
+        case 'rarity':
+          return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [myListings, mySortBy]);
+
+  // Get items that aren't listed yet
+  const unlistedItems = ownedItems.filter(
+    (item) => !listings.some(l => l.itemId === item.id)
+  );
+
+  const sortedUnlistedItems = useMemo(() => {
+    return [...unlistedItems].sort((a, b) => {
+      switch (mySortBy) {
+        case 'attack':
+          return b.attack - a.attack;
+        case 'defense':
+          return b.defense - a.defense;
+        case 'rarity':
+          return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [unlistedItems, mySortBy]);
+
+  const sortedOtherListings = useMemo(() => {
+    return [...otherListings].sort((a, b) => {
+      switch (marketSortBy) {
+        case 'attack':
+          return b.attack - a.attack;
+        case 'defense':
+          return b.defense - a.defense;
+        case 'rarity':
+          return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        case 'price':
+          return a.price - b.price; // ascending price
+        default:
+          return 0;
+      }
+    });
+  }, [otherListings, marketSortBy]);
+
+  // Format price for player market: round up to nearest 0.001 and show 3 decimals
+  const formatPriceRoundUp3 = (price: number): string => {
+    const v = Math.ceil(price * 1000) / 1000;
+    // Keep up to 3 decimals, but trim unnecessary trailing zeros
+    let s = v.toFixed(3);
+    s = s.replace(/\.0+$|(?<=\.[0-9]*?)0+$/g, '');
+    // If the string ends with a lone dot, remove it
+    s = s.replace(/\.$/, '');
+    return `${s} SUI`;
+  };
 
   // Handle listing an item
   const handleListItem = async (itemId: string) => {
@@ -257,11 +335,6 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     }
   }, [transactionStatus]);
 
-  // Get items that aren't listed yet
-  const unlistedItems = ownedItems.filter(
-    item => !listings.some(l => l.itemId === item.id)
-  );
-
   return (
     <div className="marketplace">
       <div className="marketplace-header">
@@ -307,18 +380,46 @@ export function Marketplace({ onBack }: MarketplaceProps) {
           <div className="my-listings-tab">
             <div className="section">
               <h3>Your Items</h3>
-              {myListings.length === 0 && unlistedItems.length === 0 ? (
+                <div className="sort-controls">
+                  <span className="sort-label">Sort by:</span>
+                  <button 
+                    className={`sort-btn ${mySortBy === 'attack' ? 'active' : ''}`}
+                    onClick={() => setMySortBy('attack')}
+                  >
+                    ⚔️ Attack
+                  </button>
+                  <button 
+                    className={`sort-btn ${mySortBy === 'defense' ? 'active' : ''}`}
+                    onClick={() => setMySortBy('defense')}
+                  >
+                    🛡️ Defense
+                  </button>
+                  <button 
+                    className={`sort-btn ${mySortBy === 'rarity' ? 'active' : ''}`}
+                    onClick={() => setMySortBy('rarity')}
+                  >
+                    ✨ Rarity
+                  </button>
+                  <button
+                    className={`sort-btn ${showListed ? 'active' : ''}`}
+                    onClick={() => setShowListed(s => !s)}
+                    title={showListed ? 'Hide listed items' : 'Show listed items'}
+                  >
+                    {showListed ? 'Listed: On' : 'Listed: Off'}
+                  </button>
+                </div>
+
+                {myListings.length === 0 && unlistedItems.length === 0 ? (
                 <p className="no-items">No items yet. Play the game to collect loot!</p>
               ) : (
                 <div className="items-grid">
-                  {/* Listed items */}
-                  {myListings.map(listing => (
+                    {/* Listed items */}
+                    {showListed && sortedMyListings.map((listing: MarketplaceListing) => (
                     <div
                       key={listing.itemId}
                       className="item-card listed"
                       style={{ borderColor: RARITY_COLORS[listing.rarity] }}
                     >
-                      <div className="listed-badge">FOR SALE</div>
                       <div className="item-rarity" style={{ color: RARITY_COLORS[listing.rarity] }}>
                         {listing.rarity.toUpperCase()}
                       </div>
@@ -341,7 +442,7 @@ export function Marketplace({ onBack }: MarketplaceProps) {
                   ))}
                   
                   {/* Unlisted items */}
-                  {unlistedItems.map(item => (
+                  {sortedUnlistedItems.map((item: OwnedItem) => (
                     <div
                       key={item.id}
                       className="item-card sellable"
@@ -428,13 +529,40 @@ export function Marketplace({ onBack }: MarketplaceProps) {
             <p className="market-description">
               Browse items listed by other players. 2% fee on all purchases goes to developers.
             </p>
+            <div className="sort-controls">
+              <span className="sort-label">Sort by:</span>
+              <button 
+                className={`sort-btn ${marketSortBy === 'attack' ? 'active' : ''}`}
+                onClick={() => setMarketSortBy('attack')}
+              >
+                ⚔️ Attack
+              </button>
+              <button 
+                className={`sort-btn ${marketSortBy === 'defense' ? 'active' : ''}`}
+                onClick={() => setMarketSortBy('defense')}
+              >
+                🛡️ Defense
+              </button>
+              <button 
+                className={`sort-btn ${marketSortBy === 'rarity' ? 'active' : ''}`}
+                onClick={() => setMarketSortBy('rarity')}
+              >
+                ✨ Rarity
+              </button>
+              <button 
+                className={`sort-btn ${marketSortBy === 'price' ? 'active' : ''}`}
+                onClick={() => setMarketSortBy('price')}
+              >
+                💰 Price
+              </button>
+            </div>
             {loading ? (
               <p className="loading-text">Loading listings...</p>
             ) : otherListings.length === 0 ? (
               <p className="no-items">No items currently for sale. Check back later!</p>
             ) : (
               <div className="items-grid">
-                {otherListings.map(listing => (
+                {sortedOtherListings.map((listing: MarketplaceListing) => (
                   <div
                     key={listing.itemId}
                     className="item-card market-item"
@@ -449,8 +577,8 @@ export function Marketplace({ onBack }: MarketplaceProps) {
                       <span>🛡️ {listing.defense}</span>
                     </div>
                     <div className="price-info">
-                      <div className="item-price">{formatPrice(listing.price)}</div>
-                      <div className="fee-info">+{formatPrice(calculateFee(listing.price))} fee</div>
+                      <div className="item-price">{formatPriceRoundUp3(listing.price)}</div>
+                      <div className="fee-info">+{formatPriceRoundUp3(calculateFee(listing.price))} fee</div>
                     </div>
                     <div className="seller-info">
                       Seller: {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
