@@ -116,6 +116,40 @@ module chainflow::item {
         mint_item(name, rarity, attack, defense, description, image_url, recipient, ctx);
     }
 
+    /// Internal mint function for marketplace premade items
+    /// Returns the Item instead of transferring it
+    public(package) fun mint_item_internal(
+        name: String,
+        rarity: String,
+        attack: u64,
+        defense: u64,
+        description: String,
+        image_url: String,
+        ctx: &mut TxContext,
+    ): Item {
+        let item = Item {
+            id: object::new(ctx),
+            name,
+            rarity,
+            attack,
+            defense,
+            description,
+            image_url,
+            minted_at: tx_context::epoch(ctx),
+            game_id: string::utf8(b"chainflow-roguelike-v1"),
+        };
+
+        // Emit event
+        sui::event::emit(ItemMinted {
+            item_id: object::id(&item),
+            name: item.name,
+            rarity: item.rarity,
+            owner: tx_context::sender(ctx),
+        });
+
+        item
+    }
+
     // === View Functions ===
 
     /// Get item name

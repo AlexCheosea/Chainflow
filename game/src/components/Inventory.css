@@ -74,33 +74,39 @@
 .inventory-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .inventory-item {
-  padding: 12px;
+  padding: 6px 10px;
   background: rgba(42, 42, 74, 0.8);
   border: 2px solid;
   border-radius: 6px;
-}
-
-.item-rarity {
-  font-size: 10px;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.item-name {
-  color: #fff;
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.item-stats {
   display: flex;
-  gap: 16px;
-  font-size: 12px;
+  align-items: center;
+  gap: 12px;
+}
+
+.inventory-item .item-rarity {
+  font-size: 9px;
+  font-weight: bold;
+  margin-bottom: 0;
+  min-width: 70px;
+}
+
+.inventory-item .item-name {
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.inventory-item .item-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  margin-left: auto;
 }
 
 .attack {

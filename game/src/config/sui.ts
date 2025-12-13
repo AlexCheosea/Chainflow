@@ -23,7 +23,7 @@ export const suiClient = new SuiClient({
 // Contract configuration - UPDATE THIS AFTER DEPLOYMENT
 export const CONTRACT_CONFIG = {
   // Package ID will be set after deploying the Move contract
-  packageId: '0xcc105f1cf5f040af1bddec386a39cecdd78e2c6004faf4710a76191f21f5d0fa',
+  packageId: '0xec1f870c95aee315c6bf3514e7cdc78a6eabd5b9610709311e4d5ee053fbbebc',
   // Module name
   module: 'item',
   // Function to mint items

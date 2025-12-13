@@ -12,7 +12,7 @@ import { MainMenu } from './components/MainMenu';
 import { FloorTransitionModal } from './components/MintNotification';
 import { GameProvider, useGameContext } from './context/GameContext';
 import { networkConfig, DEFAULT_NETWORK } from './config/sui';
-import { createBatchMintTransaction } from './services/itemMinting';
+import { createBatchMintTransactionWithWalrus } from './services/itemMinting';
 import type { ItemData } from './game/entities/Item';
 import { EventBus } from './game/EventBus';
 import '@mysten/dapp-kit/dist/index.css';
@@ -83,8 +83,9 @@ function GameApp() {
     setMintProgress({ current: 0, total: selectedItems.length });
 
     try {
-      // Create a single batch transaction for all selected items
-      const tx = createBatchMintTransaction({
+      // Create a batch transaction with Walrus image upload
+      // This generates NFT images with floor text and uploads to Walrus
+      const tx = await createBatchMintTransactionWithWalrus({
         items: selectedItems,
         recipientAddress: account.address,
       });

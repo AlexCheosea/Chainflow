@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useGameContext, getItemSlotType } from '../context/GameContext';
 import { WalletConnect } from './WalletConnect';
+import { Marketplace } from './Marketplace';
 import { EventBus, GameState } from '../game/EventBus';
 import type { OwnedItem } from '../services/itemMinting';
 import './MainMenu.css';
@@ -39,6 +40,7 @@ export function MainMenu() {
   } = useGameContext();
   
   const [showInventory, setShowInventory] = useState(false);
+  const [showMarketplace, setShowMarketplace] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('rarity');
 
   const sortedItems = useMemo(() => {
@@ -87,7 +89,9 @@ export function MainMenu() {
           <WalletConnect />
         </div>
 
-        {!showInventory ? (
+        {showMarketplace ? (
+          <Marketplace onBack={() => setShowMarketplace(false)} />
+        ) : !showInventory ? (
           <div className="menu-buttons">
             <button 
               className="menu-btn play-btn" 
@@ -104,13 +108,13 @@ export function MainMenu() {
             </button>
             <button 
               className="menu-btn marketplace-btn" 
-              disabled={true}
+              onClick={() => setShowMarketplace(true)}
+              disabled={!account}
             >
               🛒 Marketplace
-              <span className="coming-soon-badge">Coming Soon</span>
             </button>
             {!account && (
-              <p className="connect-hint">Connect wallet to access inventory</p>
+              <p className="connect-hint">Connect wallet to access inventory and marketplace</p>
             )}
           </div>
         ) : (
