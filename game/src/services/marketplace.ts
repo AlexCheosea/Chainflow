@@ -15,7 +15,7 @@ export const DEV_WALLET = '0x4e3fe4f8b863fb54446c875fab14ab06b6830a678721f4859ea
 const MARKETPLACE_MODULE = 'marketplace';
 
 // Marketplace shared object ID - UPDATE AFTER DEPLOYMENT
-export const MARKETPLACE_OBJECT_ID = '0xf3b9b3e51e12c36b6fd439470398fc722f60ae35dbdacd16dc25e56aeb8bf80f';
+export const MARKETPLACE_OBJECT_ID = '0xadacb87f4189caa6dd46ccf2cd8109eb06a0e7b0e21881742c0a664aec087d28';
 
 // Premade item prices in SUI
 export const PREMADE_PRICES = {

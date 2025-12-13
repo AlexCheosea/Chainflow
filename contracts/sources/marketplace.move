@@ -2,7 +2,7 @@ module chainflow::marketplace {
     use std::string::{Self, String};
     use sui::coin::{Self, Coin};
     use sui::sui::SUI;
-    use sui::table::{Self, Table};
+    use sui::dynamic_object_field as ofield;
     use sui::event;
     use chainflow::item::{Self, Item};
 
@@ -34,12 +34,12 @@ module chainflow::marketplace {
     /// Shared marketplace object
     public struct Marketplace has key {
         id: UID,
-        listings: Table<ID, Listing>,
         listing_count: u64,
     }
 
-    /// A listing for an item on sale
-    public struct Listing has store {
+    /// A listing for an item on sale - now an object for external visibility
+    public struct Listing has key, store {
+        id: UID,
         item: Item,
         price: u64,
         seller: address,
@@ -82,7 +82,6 @@ module chainflow::marketplace {
     fun init(ctx: &mut TxContext) {
         let marketplace = Marketplace {
             id: object::new(ctx),
-            listings: table::new(ctx),
             listing_count: 0,
         };
         transfer::share_object(marketplace);
@@ -103,13 +102,14 @@ module chainflow::marketplace {
         let seller = tx_context::sender(ctx);
         
         let listing = Listing {
+            id: object::new(ctx),
             item,
             price,
             seller,
         };
         
-        // Use item_id as the listing key
-        table::add(&mut marketplace.listings, item_id, listing);
+        // Use dynamic_object_field for external visibility
+        ofield::add(&mut marketplace.id, item_id, listing);
         marketplace.listing_count = marketplace.listing_count + 1;
         
         event::emit(ItemListed {
@@ -127,9 +127,10 @@ module chainflow::marketplace {
         mut payment: Coin<SUI>,
         ctx: &mut TxContext,
     ) {
-        assert!(table::contains(&marketplace.listings, item_id), EListingNotFound);
+        assert!(ofield::exists_<ID>(&marketplace.id, item_id), EListingNotFound);
         
-        let Listing { item, price, seller } = table::remove(&mut marketplace.listings, item_id);
+        let Listing { id: listing_uid, item, price, seller } = ofield::remove(&mut marketplace.id, item_id);
+        object::delete(listing_uid);
         marketplace.listing_count = marketplace.listing_count - 1;
         
         let payment_amount = coin::value(&payment);
@@ -175,14 +176,15 @@ module chainflow::marketplace {
         item_id: ID,
         ctx: &mut TxContext,
     ) {
-        assert!(table::contains(&marketplace.listings, item_id), EListingNotFound);
+        assert!(ofield::exists_<ID>(&marketplace.id, item_id), EListingNotFound);
         
-        // Check seller ownership BEFORE removing from table
-        let listing = table::borrow(&marketplace.listings, item_id);
+        // Check seller ownership BEFORE removing
+        let listing = ofield::borrow<ID, Listing>(&marketplace.id, item_id);
         assert!(listing.seller == tx_context::sender(ctx), ENotOwner);
         
         // Now safe to remove
-        let Listing { item, price: _, seller } = table::remove(&mut marketplace.listings, item_id);
+        let Listing { id: listing_uid, item, price: _, seller } = ofield::remove(&mut marketplace.id, item_id);
+        object::delete(listing_uid);
         marketplace.listing_count = marketplace.listing_count - 1;
         
         event::emit(ItemDelisted {
@@ -316,18 +318,18 @@ module chainflow::marketplace {
 
     /// Check if an item is listed
     public fun is_listed(marketplace: &Marketplace, item_id: ID): bool {
-        table::contains(&marketplace.listings, item_id)
+        ofield::exists_<ID>(&marketplace.id, item_id)
     }
 
     /// Get listing details
     public fun get_listing_price(marketplace: &Marketplace, item_id: ID): u64 {
-        let listing = table::borrow(&marketplace.listings, item_id);
+        let listing = ofield::borrow<ID, Listing>(&marketplace.id, item_id);
         listing.price
     }
 
     /// Get listing seller
     public fun get_listing_seller(marketplace: &Marketplace, item_id: ID): address {
-        let listing = table::borrow(&marketplace.listings, item_id);
+        let listing = ofield::borrow<ID, Listing>(&marketplace.id, item_id);
         listing.seller
     }
 }
