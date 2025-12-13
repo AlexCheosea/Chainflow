@@ -177,10 +177,13 @@ module chainflow::marketplace {
     ) {
         assert!(table::contains(&marketplace.listings, item_id), EListingNotFound);
         
+        // Check seller ownership BEFORE removing from table
+        let listing = table::borrow(&marketplace.listings, item_id);
+        assert!(listing.seller == tx_context::sender(ctx), ENotOwner);
+        
+        // Now safe to remove
         let Listing { item, price: _, seller } = table::remove(&mut marketplace.listings, item_id);
         marketplace.listing_count = marketplace.listing_count - 1;
-        
-        assert!(seller == tx_context::sender(ctx), ENotOwner);
         
         event::emit(ItemDelisted {
             listing_id: item_id,

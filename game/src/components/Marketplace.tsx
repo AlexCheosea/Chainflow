@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { normalizeSuiAddress } from '@mysten/sui/utils';
 import { useGameContext } from '../context/GameContext';
 import {
   getPremadeItems,
@@ -64,11 +65,20 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     }
   }, [activeTab, fetchListings]);
 
-  // Get user's listings
-  const myListings = listings.filter(l => l.seller === account?.address);
+  // Normalize user address for comparison (handles leading zeros, case differences)
+  const normalizedUserAddress = account?.address ? normalizeSuiAddress(account.address) : null;
+
+  // Get user's listings (normalize both addresses for comparison)
+  const myListings = listings.filter(l => {
+    const normalizedSeller = normalizeSuiAddress(l.seller);
+    return normalizedSeller === normalizedUserAddress;
+  });
   
   // Get other players' listings
-  const otherListings = listings.filter(l => l.seller !== account?.address);
+  const otherListings = listings.filter(l => {
+    const normalizedSeller = normalizeSuiAddress(l.seller);
+    return normalizedSeller !== normalizedUserAddress;
+  });
 
   // Handle listing an item
   const handleListItem = async (itemId: string) => {

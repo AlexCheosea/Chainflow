@@ -5,10 +5,10 @@ export type EnemyRarity = 'normal' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 // Rarity stat multipliers (HP, Attack, Speed)
 const RARITY_MULTIPLIERS: Record<EnemyRarity, { hp: number; attack: number; speed: number; dropChance: number }> = {
   normal: { hp: 1.0, attack: 1.0, speed: 1.0, dropChance: 0.2 },
-  uncommon: { hp: 1.3, attack: 1.2, speed: 1.1, dropChance: 0.35 },
-  rare: { hp: 1.6, attack: 1.4, speed: 1.2, dropChance: 0.5 },
-  epic: { hp: 2.0, attack: 1.7, speed: 1.3, dropChance: 0.7 },
-  legendary: { hp: 3.0, attack: 2.0, speed: 1.5, dropChance: 0.95 },
+  uncommon: { hp: 1.3, attack: 1.2, speed: 1.3, dropChance: 0.35 },
+  rare: { hp: 1.6, attack: 1.4, speed: 1.4, dropChance: 0.5 },
+  epic: { hp: 2.0, attack: 1.7, speed: 1.6, dropChance: 0.7 },
+  legendary: { hp: 3.0, attack: 2.0, speed: 2.0, dropChance: 0.95 },
 };
 
 // Spawn weights (lower = rarer)
