@@ -110,16 +110,51 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     
     try {
       const tx = createBuyTransaction(listing.itemId, listing.price);
-      await signAndExecute({ transaction: tx });
+      const result = await signAndExecute({ transaction: tx });
+      
+      // Log full result for debugging
+      console.log('Transaction result:', JSON.stringify(result, null, 2));
+      
+      // Check if transaction was successful
+      const effects = result.effects as { status?: { status?: string; error?: string } } | undefined;
+      if (effects?.status?.status !== 'success') {
+        const errorMsg = effects?.status?.error || '';
+        console.error('Transaction failed with error:', errorMsg);
+        setTransactionStatus('error');
+        
+        // Check for various insufficient funds error patterns
+        const lowerError = errorMsg.toLowerCase();
+        if (lowerError.includes('insufficient') || 
+            lowerError.includes('balance') || 
+            lowerError.includes('coin') ||
+            errorMsg.includes('InsufficientCoinBalance') ||
+            errorMsg.includes('InsufficientGas')) {
+          setStatusMessage('Insufficient funds to complete purchase');
+        } else if (errorMsg) {
+          setStatusMessage(errorMsg);
+        } else {
+          setStatusMessage('Transaction failed - please try again');
+        }
+        return;
+      }
       
       setTransactionStatus('success');
       setStatusMessage('Item purchased successfully!');
       await refreshInventory();
       await fetchListings();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to buy item:', error);
       setTransactionStatus('error');
-      setStatusMessage('Failed to purchase item');
+      const errorStr = String(error).toLowerCase();
+      if (errorStr.includes('insufficient') || errorStr.includes('balance') || errorStr.includes('reject')) {
+        if (errorStr.includes('reject')) {
+          setStatusMessage('Transaction rejected by user');
+        } else {
+          setStatusMessage('Insufficient funds to complete purchase');
+        }
+      } else {
+        setStatusMessage('Failed to purchase item');
+      }
     }
   };
 
@@ -154,15 +189,50 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     
     try {
       const tx = await createBuyPremadeTransaction(item.rarity, item.itemType);
-      await signAndExecute({ transaction: tx });
+      const result = await signAndExecute({ transaction: tx });
+      
+      // Log full result for debugging
+      console.log('Transaction result:', JSON.stringify(result, null, 2));
+      
+      // Check if transaction was successful
+      const effects = result.effects as { status?: { status?: string; error?: string } } | undefined;
+      if (effects?.status?.status !== 'success') {
+        const errorMsg = effects?.status?.error || '';
+        console.error('Transaction failed with error:', errorMsg);
+        setTransactionStatus('error');
+        
+        // Check for various insufficient funds error patterns
+        const lowerError = errorMsg.toLowerCase();
+        if (lowerError.includes('insufficient') || 
+            lowerError.includes('balance') || 
+            lowerError.includes('coin') ||
+            errorMsg.includes('InsufficientCoinBalance') ||
+            errorMsg.includes('InsufficientGas')) {
+          setStatusMessage('Insufficient funds to complete purchase');
+        } else if (errorMsg) {
+          setStatusMessage(errorMsg);
+        } else {
+          setStatusMessage('Transaction failed - please try again');
+        }
+        return;
+      }
       
       setTransactionStatus('success');
       setStatusMessage(`${item.name} purchased successfully!`);
       await refreshInventory();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to buy premade item:', error);
       setTransactionStatus('error');
-      setStatusMessage('Failed to purchase item');
+      const errorStr = String(error).toLowerCase();
+      if (errorStr.includes('insufficient') || errorStr.includes('balance') || errorStr.includes('reject')) {
+        if (errorStr.includes('reject')) {
+          setStatusMessage('Transaction rejected by user');
+        } else {
+          setStatusMessage('Insufficient funds to complete purchase');
+        }
+      } else {
+        setStatusMessage('Failed to purchase item');
+      }
     }
   };
 
@@ -225,17 +295,20 @@ export function Marketplace({ onBack }: MarketplaceProps) {
         {/* My Listings Tab */}
         {activeTab === 'my-listings' && (
           <div className="my-listings-tab">
-            {/* Active listings */}
-            {myListings.length > 0 && (
-              <div className="section">
-                <h3>Your Active Listings</h3>
+            <div className="section">
+              <h3>Your Items</h3>
+              {myListings.length === 0 && unlistedItems.length === 0 ? (
+                <p className="no-items">No items yet. Play the game to collect loot!</p>
+              ) : (
                 <div className="items-grid">
+                  {/* Listed items */}
                   {myListings.map(listing => (
                     <div
                       key={listing.itemId}
                       className="item-card listed"
                       style={{ borderColor: RARITY_COLORS[listing.rarity] }}
                     >
+                      <div className="listed-badge">FOR SALE</div>
                       <div className="item-rarity" style={{ color: RARITY_COLORS[listing.rarity] }}>
                         {listing.rarity.toUpperCase()}
                       </div>
@@ -244,27 +317,20 @@ export function Marketplace({ onBack }: MarketplaceProps) {
                         <span>⚔️ {listing.attack}</span>
                         <span>🛡️ {listing.defense}</span>
                       </div>
-                      <div className="item-price">{formatPrice(listing.price)}</div>
-                      <button
-                        className="delist-btn"
-                        onClick={() => handleDelistItem(listing.itemId)}
-                        disabled={transactionStatus === 'pending'}
-                      >
-                        Delist
-                      </button>
+                      <div className="sell-controls">
+                        <div className="listed-price-label">Listed for {formatPrice(listing.price)}</div>
+                        <button
+                          className="delist-btn"
+                          onClick={() => handleDelistItem(listing.itemId)}
+                          disabled={transactionStatus === 'pending'}
+                        >
+                          Delist
+                        </button>
+                      </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* Items available to list */}
-            <div className="section">
-              <h3>Your Items (Available to Sell)</h3>
-              {unlistedItems.length === 0 ? (
-                <p className="no-items">No items to sell. Play the game to collect loot!</p>
-              ) : (
-                <div className="items-grid">
+                  
+                  {/* Unlisted items */}
                   {unlistedItems.map(item => (
                     <div
                       key={item.id}

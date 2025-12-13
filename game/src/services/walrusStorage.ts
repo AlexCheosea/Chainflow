@@ -181,17 +181,25 @@ export async function generateNFTImage(
  * @returns The blob ID for retrieval
  */
 export async function uploadToWalrus(blob: Blob): Promise<string> {
+  const uploadUrl = `${WALRUS_PUBLISHER_URL}/v1/store?epochs=5`;
+  console.log('[Walrus] Uploading to:', uploadUrl);
+  
   try {
-    const response = await fetch(`${WALRUS_PUBLISHER_URL}/v1/store?epochs=5`, {
+    const response = await fetch(uploadUrl, {
       method: 'PUT',
       body: blob,
     });
 
+    console.log('[Walrus] Response status:', response.status, response.statusText);
+    
     if (!response.ok) {
-      throw new Error(`Walrus upload failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('[Walrus] Upload error response:', errorText);
+      throw new Error(`Walrus upload failed: ${response.status} ${response.statusText}`);
     }
 
     const result = await response.json();
+    console.log('[Walrus] Upload response:', JSON.stringify(result, null, 2));
     
     // Handle both newlyCreated and alreadyCertified responses
     if (result.newlyCreated) {
@@ -202,7 +210,7 @@ export async function uploadToWalrus(blob: Blob): Promise<string> {
       throw new Error('Unexpected Walrus response format');
     }
   } catch (error) {
-    console.error('Walrus upload error:', error);
+    console.error('[Walrus] Upload error:', error);
     throw error;
   }
 }
@@ -245,7 +253,11 @@ export async function generateAndUploadNFTImage(
   isShopItem: boolean,
   rarity: string
 ): Promise<string> {
+  console.log('[Walrus] Generating NFT image for:', itemName);
   const imageBlob = await generateNFTImage(itemName, floorNumber, isShopItem, rarity);
+  console.log('[Walrus] Image generated, size:', imageBlob.size, 'bytes');
+  console.log('[Walrus] Uploading to Walrus...');
   const blobId = await uploadToWalrus(imageBlob);
+  console.log('[Walrus] Upload successful, blobId:', blobId);
   return blobId;
 }

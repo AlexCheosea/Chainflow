@@ -145,26 +145,36 @@ export async function createBatchMintTransactionWithWalrus(params: BatchMintPara
   
   const tx = new Transaction();
   
+  console.log('[Minting] Starting batch mint with Walrus, USE_WALRUS =', USE_WALRUS);
+  console.log('[Minting] Items to mint:', items.map(i => i.name));
+  
   // Upload all images to Walrus in parallel
   const imageUrls = await Promise.all(
     items.map(async (item) => {
       if (USE_WALRUS) {
         try {
+          console.log('[Minting] Uploading image for:', item.name);
           const blobId = await generateAndUploadNFTImage(
             item.name,
             item.floorObtained,
             false,
             item.rarity
           );
-          return getWalrusUrl(blobId);
+          const url = getWalrusUrl(blobId);
+          console.log('[Minting] ✅ Walrus URL for', item.name, ':', url);
+          return url;
         } catch (error) {
-          console.warn('Walrus upload failed for', item.name, ':', error);
-          return getFallbackImageUrl(item);
+          console.error('[Minting] ❌ Walrus upload failed for', item.name, ':', error);
+          const fallbackUrl = getFallbackImageUrl(item);
+          console.log('[Minting] Using fallback URL:', fallbackUrl);
+          return fallbackUrl;
         }
       }
       return getFallbackImageUrl(item);
     })
   );
+  
+  console.log('[Minting] All image URLs:', imageUrls);
   
   // Add a mint call for each item
   for (let i = 0; i < items.length; i++) {
