@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit';
 import { useGameContext, getItemSlotType } from '../context/GameContext';
 import { WalletConnect } from './WalletConnect';
 import { Marketplace } from './Marketplace';

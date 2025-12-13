@@ -85,8 +85,8 @@
 }
 
 .marketplace-btn {
-  background: linear-gradient(135deg, #666666, #444444);
-  color: #aaa;
+  background: linear-gradient(135deg, #ffaa00a6, #ffaa00a6);
+  color: #fff;
   box-shadow: 0 4px 20px rgba(100, 100, 100, 0.2);
   position: relative;
 }
@@ -118,7 +118,7 @@
 .back-btn {
   background: transparent;
   border: 1px solid #444;
-  color: #888;
+  color: #fff;
   padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
@@ -377,6 +377,44 @@
   padding: 4px 8px;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Inventory-only: keep content sizes original, make card containers ~30% shorter by fixing height */
+.inventory-section .item-card {
+  /* restore padding to keep content readable */
+  padding: 16px;
+  /* set a shorter fixed height (approx 30% less than default flow height)
+     and hide overflow so content keeps original sizing while cards appear shorter */
+  height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Restore original content sizes inside inventory cards */
+.inventory-section .item-type-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+.inventory-section .item-rarity {
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+.inventory-section .item-card .item-name {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.inventory-section .item-card .item-stats {
+  font-size: 12px;
+  gap: 12px;
+}
+.inventory-section .equipped-badge {
+  top: -8px;
+  right: -8px;
+  padding: 4px 8px;
+  font-size: 9px;
 }
 
 /* Footer */

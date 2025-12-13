@@ -350,15 +350,16 @@ export class GameScene extends Phaser.Scene {
     // Play player attack animation
     this.player.playAttackAnimation(angle);
     
-    // Create attack slash visual - originates slightly in front of player
-    const offsetDistance = 8; // Small offset from player center
+    // Create attack slash visual — center the sprite on spawn so it overlaps hitbox
+    const offsetDistance = 4; // small forward nudge from player center
     const slashX = this.player.sprite.x + Math.cos(angle) * offsetDistance;
     const slashY = this.player.sprite.y + Math.sin(angle) * offsetDistance;
     const slash = this.add.sprite(slashX, slashY, 'attack_slash');
     slash.setRotation(angle); // Point in attack direction
-    slash.setOrigin(0, 0.5); // Origin at left-center so it extends outward from player
+    slash.setOrigin(0.5, 0.5); // center origin so sprite is centered on slashX/slashY
     slash.setAlpha(0.7);
-    slash.setScale(this.attackRange / 35); // Scale to match attack range
+    // Reduce visual size: use 55% of previous scale so effect is slightly larger than half
+    slash.setScale((this.attackRange / 35) * 0.55); // Scale to match attack range (55%)
     
     // Animate slash
     this.tweens.add({

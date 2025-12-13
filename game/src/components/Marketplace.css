@@ -20,6 +20,11 @@
   font-family: monospace;
 }
 
+/* Nudge the cart icon and 'Marketplace' text slightly upward for visibility */
+.marketplace-header h2 {
+  transform: translateY(-10px);
+}
+
 .back-btn {
   padding: 10px 20px;
   background: rgba(60, 60, 100, 0.6);
