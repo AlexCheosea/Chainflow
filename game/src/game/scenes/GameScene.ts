@@ -350,24 +350,31 @@ export class GameScene extends Phaser.Scene {
     // Play player attack animation
     this.player.playAttackAnimation(angle);
     
-    // Create attack slash visual — center the sprite on spawn so it overlaps hitbox
+    // Create attack slash visual, but spawn it 2 frames after the attack started
+    // and remove it 4 frames after it was spawned.
     const offsetDistance = 4; // small forward nudge from player center
-    const slashX = this.player.sprite.x + Math.cos(angle) * offsetDistance;
-    const slashY = this.player.sprite.y + Math.sin(angle) * offsetDistance;
-    const slash = this.add.sprite(slashX, slashY, 'attack_slash');
-    slash.setRotation(angle); // Point in attack direction
-    slash.setOrigin(0.5, 0.5); // center origin so sprite is centered on slashX/slashY
-    slash.setAlpha(0.7);
-    // Reduce visual size: use 55% of previous scale so effect is slightly larger than half
-    slash.setScale((this.attackRange / 35) * 0.55); // Scale to match attack range (55%)
-    
-    // Animate slash
-    this.tweens.add({
-      targets: slash,
-      alpha: 0,
-      scale: slash.scale * 1.3,
-      duration: 200,
-      onComplete: () => slash.destroy(),
+    const frameRate = Math.max(30, Math.round(this.game.loop.actualFps || 60));
+    const frameMs = 1000 / frameRate;
+    const spawnDelayMs = Math.round(frameMs * 4); // 2 frames
+    const lifespanMs = Math.round(frameMs * 8); // 4 frames after spawn
+
+    this.time.delayedCall(spawnDelayMs, () => {
+      const slashX = this.player.sprite.x + Math.cos(angle) * offsetDistance;
+      const slashY = this.player.sprite.y + Math.sin(angle) * offsetDistance;
+      const slash = this.add.sprite(slashX, slashY, 'attack_slash');
+      slash.setRotation(angle); // Point in attack direction
+      slash.setOrigin(0.5, 0.5);
+      slash.setAlpha(0.7);
+      slash.setScale((this.attackRange / 35) * 0.55);
+
+      // Fade and scale over the lifespan, then destroy
+      this.tweens.add({
+        targets: slash,
+        alpha: 0,
+        scale: slash.scale * 1.3,
+        duration: lifespanMs,
+        onComplete: () => slash.destroy(),
+      });
     });
     
     // Check for enemies in attack range
