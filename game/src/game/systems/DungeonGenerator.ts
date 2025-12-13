@@ -175,12 +175,59 @@ export class DungeonGenerator {
     // Get floor-based theme
     const theme = FLOOR_THEMES[(this.floor - 1) % FLOOR_THEMES.length];
     
-    // Create themed wall texture
+    // Create themed wall texture with a simple brick-like pattern for more depth
     const wallGraphics = this.scene.make.graphics({ x: 0, y: 0 });
+    // Base fill
     wallGraphics.fillStyle(theme.wall);
     wallGraphics.fillRect(0, 0, 32, 32);
-    wallGraphics.lineStyle(1, theme.wall + 0x202020);
+
+    // Helper to clamp color to 24-bit
+    const clamp24 = (c: number) => c & 0xffffff;
+    const lighter = clamp24(theme.wall + 0x101010);
+    const darker = clamp24(theme.wall - 0x0c0c0c);
+
+    // Draw brick rows (approximate brick texture)
+    const brickH = 8;
+    for (let by = 0; by < 32; by += brickH) {
+      const offset = (Math.floor(by / brickH) % 2 === 0) ? 0 : -8;
+      for (let bx = offset; bx < 32; bx += 16) {
+        const bw = 16;
+        // Slightly lighter bricks
+        wallGraphics.fillStyle(lighter);
+        wallGraphics.fillRect(bx, by + 1, bw, brickH - 2);
+        // Add subtle darker line on bottom of brick for depth
+        wallGraphics.fillStyle(darker);
+        wallGraphics.fillRect(bx, by + brickH - 2, bw, 1);
+      }
+    }
+
+    // Mortar lines (thin darker lines)
+    wallGraphics.lineStyle(1, darker);
+    for (let by = 0; by <= 32; by += brickH) {
+      wallGraphics.lineBetween(0, by, 32, by);
+    }
+
+    // Vertical mortar (every 16px, offset every other row)
+    for (let row = 0; row < 4; row++) {
+      const by = row * brickH;
+      const offset = (row % 2 === 0) ? 0 : 8;
+      for (let bx = offset; bx <= 32; bx += 16) {
+        wallGraphics.lineBetween(bx, by, bx, by + brickH);
+      }
+    }
+
+    // Add tiny random chips for a bit of noise
+    for (let i = 0; i < 10; i++) {
+      const nx = Phaser.Math.Between(1, 30);
+      const ny = Phaser.Math.Between(1, 30);
+      wallGraphics.fillStyle(darker);
+      wallGraphics.fillRect(nx, ny, 1, 1);
+    }
+
+    // Border stroke
+    wallGraphics.lineStyle(1, clamp24(theme.wall + 0x202020));
     wallGraphics.strokeRect(0, 0, 32, 32);
+
     wallGraphics.generateTexture(`wall_floor_${this.floor}`, 32, 32);
     wallGraphics.destroy();
 
