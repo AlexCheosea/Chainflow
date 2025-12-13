@@ -22,12 +22,25 @@ export class Player {
     const baseFrameSize = 480;
     const scale = 0.1; // Scale down 480px frames to ~48px on screen
     this.sprite.setScale(scale);
+    // Use the frame's origin if available to match visual alignment
     this.sprite.setOrigin(0.5, 0.5);
+    this.sprite.setOriginFromFrame();
 
-    // Set hitbox to match scaled sprite size
-    const hitboxSize = baseFrameSize * scale;
-    this.sprite.body?.setSize(hitboxSize, hitboxSize);
-    this.sprite.body?.setOffset((baseFrameSize - hitboxSize) / 2, (baseFrameSize - hitboxSize) / 2);
+    // Expand and center hitbox so collisions occur before the visible sprite overlaps walls
+    const baseHit = baseFrameSize * scale;
+    const paddingW = 150;
+    const paddingH = 180; // extra pixels to make collision trigger earlier; tune to taste
+    const hitW = baseHit + paddingW;
+    const hitH = baseHit + paddingH;
+    // Center the physics body on the sprite and apply immediately
+    this.sprite.body?.setSize(hitW, hitH, true);
+    // Reapply next tick to guard against frame/texture timing issues
+    this.sprite.scene.time.delayedCall(0, () => {
+      this.sprite.body?.setSize(hitW, hitH, true);
+      // Ensure the body transform/center syncs with the GameObject after frame/origin apply
+      // (guards against trimmed frames or unusual frame pivots)
+      (this.sprite.body as any)?.updateFromGameObject?.();
+    });
     
     // Start idle animation
     this.sprite.play('idle_down');
