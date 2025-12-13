@@ -29,6 +29,8 @@ export class GameScene extends Phaser.Scene {
   private attackCooldown: number = 0;
   private attackCooldownTime: number = 400; // ms between attacks
   private attackRange: number = 70; // Increased attack range
+  // Track when pointer last moved (ms since epoch)
+  private lastPointerMoveTime: number = 0;
 
   // Background music
   private backgroundMusic: Phaser.Sound.BaseSound | null = null;
@@ -107,7 +109,10 @@ export class GameScene extends Phaser.Scene {
     };
     this.attackKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     
-    // Mouse click to attack
+    // Track pointer movement time and mouse click to attack
+    this.input.on('pointermove', () => {
+      this.lastPointerMoveTime = Date.now();
+    });
     this.input.on('pointerdown', () => {
       this.performAttack();
     });
@@ -336,16 +341,42 @@ export class GameScene extends Phaser.Scene {
     if (this.attackCooldown > 0) return;
     
     this.attackCooldown = this.attackCooldownTime;
-    
-    // Determine attack direction based on player facing or pointer
-    const pointer = this.input.activePointer;
-    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-    const angle = Phaser.Math.Angle.Between(
-      this.player.sprite.x,
-      this.player.sprite.y,
-      worldPoint.x,
-      worldPoint.y
-    );
+    // Determine attack direction by checking if the cursor moved in the last 3 seconds.
+    // If it did, use the pointer world position; otherwise use player's movement/facing.
+    let angle: number;
+    const now = Date.now();
+    const pointerMovedRecently = now - (this.lastPointerMoveTime || 0) < 3000; // 3 seconds
+    if (pointerMovedRecently) {
+      const pointer = this.input.activePointer;
+      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      angle = Phaser.Math.Angle.Between(
+        this.player.sprite.x,
+        this.player.sprite.y,
+        worldPoint.x,
+        worldPoint.y
+      );
+    } else {
+      const body = this.player.sprite.body as Phaser.Physics.Arcade.Body | undefined;
+      if (body && (body.velocity.x !== 0 || body.velocity.y !== 0)) {
+        angle = Math.atan2(body.velocity.y, body.velocity.x);
+      } else {
+        switch (this.player.facing) {
+          case 'right':
+            angle = 0;
+            break;
+          case 'down':
+            angle = Math.PI / 2;
+            break;
+          case 'left':
+            angle = Math.PI;
+            break;
+          case 'up':
+          default:
+            angle = -Math.PI / 2;
+            break;
+        }
+      }
+    }
     
     // Play player attack animation
     this.player.playAttackAnimation(angle);
