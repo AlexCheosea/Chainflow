@@ -180,7 +180,7 @@ export function Marketplace({ onBack }: MarketplaceProps) {
       await signAndExecute({ transaction: tx });
       
       setTransactionStatus('success');
-      setStatusMessage('Item delisted successfully!');
+      setStatusMessage('Item delisted successfully! Item will be returned to player inventory after a short delay.');
       await refreshInventory();
       await fetchListings();
     } catch (error) {
