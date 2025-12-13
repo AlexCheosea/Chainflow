@@ -29,9 +29,9 @@ const ARMOR_NAMES = {
 };
 
 const RARITY_WEIGHTS = [
-  { rarity: 'common' as const, weight: 50 },
-  { rarity: 'uncommon' as const, weight: 30 },
-  { rarity: 'rare' as const, weight: 15 },
+  { rarity: 'common' as const, weight: 60 },
+  { rarity: 'uncommon' as const, weight: 25 },
+  { rarity: 'rare' as const, weight: 10 },
   { rarity: 'epic' as const, weight: 4 },
   { rarity: 'legendary' as const, weight: 1 },
 ];
@@ -44,8 +44,8 @@ const RARITY_COLORS = {
   legendary: 0xffaa00,
 };
 
-// Base drop chance (20%) - decreases after each drop
-const BASE_DROP_CHANCE = 0.20;
+// Base drop chance (15%) - decreases after each drop
+const BASE_DROP_CHANCE = 0.15;
 const DROP_CHANCE_DECAY = 0.5; // Each drop reduces chance by 50%
 
 const RARITY_ORDER: ItemData['rarity'][] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];

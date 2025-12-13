@@ -92,17 +92,22 @@ export class Player {
     } else {
       this.facing = 'left';
     }
-    
+
     this.isAttacking = true;
     const animKey = `attack_${this.facing}`;
     this.sprite.play(animKey);
-    
+
+    // Adjust attack cone origin slightly behind the player's facing direction
+    const offset = 10; // Adjust this value as needed
+    const coneOrigin = {
+      x: this.sprite.x - (this.facing === 'left' ? offset : this.facing === 'right' ? -offset : 0),
+      y: this.sprite.y - (this.facing === 'up' ? offset : this.facing === 'down' ? -offset : 0),
+    };
+
     // Reset to idle after animation completes
     this.sprite.once('animationcomplete', () => {
       this.isAttacking = false;
-      // Explicitly play idle animation after attack finishes
-      const idleKey = `idle_${this.facing}`;
-      this.sprite.play(idleKey);
+      this.sprite.play(`idle_${this.facing}`);
     });
   }
 
