@@ -33,3 +33,41 @@ sacrifice(not humans, but nfts for posibble higher rewards)
 contract2:
 items for sale
 each item has
+
+
+
+to-do day 3:
+main menu updates 
+fine details for in-level texture
+enemy sprites updates
+audio tracks updates
+item assets - > nft generation (image association logic) - in walrus
+maretplace fix
+for-sale logic fix -> user visibility of listed items fix
+player sprite update (optional)
+ 
+(sales pitch draft tonight)
+-7 minutes
+->demo + pitch
+(live demo maybe)
+problem our game solves 
+the solution 
+blockchain integration - SUI blockchain, ideally walrus aswell
+
+QnA: 
+prepare some answers to possible questions 
+->tech questions
+->marketing questions
+
+Things to include in pitch
+market stats, demographics
+how we compare to competition
+->  limiting of NFTs as they are generated, market cap 
+
+3.5min demo
+3.5min pitch
+
+real tangible numbers
+
+mini-documentation
+codebase explanation -> not in the pitch, just in documentation.
