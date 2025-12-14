@@ -25,30 +25,32 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 19px 24px;
   background: rgba(26, 26, 46, 0.8);
   border-bottom: 1px solid #4a4a6a;
 }
 
 .header-left {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
 }
 
-.title {
-  font-size: 24px;
+ .title {
+  font-size: 22px;
   font-weight: bold;
   background: linear-gradient(90deg, #00ff88, #00aaff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
+  padding-bottom: 4px;
+ }
 
 .subtitle {
   font-size: 20px;
   color: #ffffff;
   font-weight: bold;
+  padding-bottom: 5px;
 }
 
 .header-right {
@@ -147,7 +149,7 @@ body {
   padding: 8px 16px;
   border-radius: 8px;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 17px;
   cursor: pointer;
   transition: all 0.2s ease;
 }

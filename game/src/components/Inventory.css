@@ -1,155 +1,345 @@
-.inventory-container {
-  position: relative;
+/* Inventory Component Styles */
+
+/* Inventory View */
+.inv-view {
+  text-align: left;
 }
 
-.inventory-toggle {
-  padding: 12px 20px;
-  background: rgba(26, 26, 46, 0.9);
-  border: 1px solid #4a4a6a;
-  border-radius: 8px;
+/* Constrain the inventory view so it doesn't expand the whole page; allow
+   the items section to scroll internally instead. Adjust reserved height
+   as needed to ensure header/title stays visible. */
+.inv-view {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 160px);
+}
+
+.inv-back-btn {
+  background: transparent;
+  border: 1px solid #444;
   color: #fff;
-  font-family: monospace;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+}
+
+.inv-back-btn:hover {
+  color: #fff;
+  border-color: #666;
+}
+
+/* Equipment Slots */
+.inv-equipment-slots {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid #333;
+}
+
+.inv-equipment-slots h3 {
+  color: #ffaa00;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.inv-slots {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.inv-slot {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px dashed #444;
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 240px;
+  text-align: center;
+}
+
+.inv-slot-label {
+  display: block;
+  color: #888;
   font-size: 14px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.inv-empty-slot {
+  color: #555;
+  font-style: italic;
+}
+
+.inv-equipped-item {
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 50, 0, 0.3);
+}
+
+/* Rarity-based border colors for equipped items */
+.inv-equipped-item[data-rarity="common"] { border-color: #aaaaaa; }
+.inv-equipped-item[data-rarity="uncommon"] { border-color: #00ff00; }
+.inv-equipped-item[data-rarity="rare"] { border-color: #0088ff; }
+.inv-equipped-item[data-rarity="epic"] { border-color: #aa00ff; }
+.inv-equipped-item[data-rarity="legendary"] { border-color: #ffaa00; }
+
+.inv-equipped-info {
+  text-align: left;
+}
+
+.inv-equipped-name {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* Rarity-based text colors for equipped item names */
+.inv-equipped-name[data-rarity="common"] { color: #aaaaaa; }
+.inv-equipped-name[data-rarity="uncommon"] { color: #00ff00; }
+.inv-equipped-name[data-rarity="rare"] { color: #0088ff; }
+.inv-equipped-name[data-rarity="epic"] { color: #aa00ff; }
+.inv-equipped-name[data-rarity="legendary"] { color: #ffaa00; }
+
+.inv-equipped-stats {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.inv-unequip-btn {
+  background: rgba(255, 0, 0, 0.3);
+  border: 1px solid #aa0000;
+  color: #ff4444;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.inventory-toggle:hover {
-  background: rgba(46, 46, 86, 0.9);
-  border-color: #6a6a9a;
+.inv-unequip-btn:hover {
+  background: #aa0000;
+  color: white;
 }
 
-.inventory-panel {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  width: 320px;
-  max-height: 500px;
-  overflow-y: auto;
-  background: rgba(26, 26, 46, 0.95);
-  border: 1px solid #4a4a6a;
-  border-radius: 8px;
-  padding: 16px;
-  z-index: 100;
+.inv-total-stats {
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.inventory-header {
+.inv-stat-label {
+  color: #888;
+}
+
+.inv-stat-value {
+  color: #ffcc00;
+  font-weight: bold;
+}
+
+/* Inventory Section */
+.inv-section {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #333;
+}
+
+/* Make the section a column flex so header stays fixed and the grid can scroll */
+.inv-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.inv-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #4a4a6a;
 }
 
-.inventory-header h3 {
+.inv-header h3 {
+  color: #00aaff;
   margin: 0;
-  color: #fff;
-  font-size: 16px;
 }
 
-.inventory-header button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.inventory-header button:disabled {
-  opacity: 0.5;
-}
-
-.inventory-empty {
-  text-align: center;
-  padding: 24px;
-  color: #888;
-}
-
-.inventory-empty .hint {
-  font-size: 12px;
-  margin-top: 8px;
-}
-
-.inventory-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.inventory-item {
-  padding: 6px 10px;
-  background: rgba(42, 42, 74, 0.8);
-  border: 2px solid;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.inventory-item .item-rarity {
-  font-size: 9px;
-  font-weight: bold;
-  margin-bottom: 0;
-  min-width: 70px;
-}
-
-.inventory-item .item-name {
-  color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 0;
-  flex: 1;
-}
-
-.inventory-item .item-stats {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  margin-left: auto;
-}
-
-.attack {
-  color: #ff6666;
-}
-
-.defense {
-  color: #6699ff;
-}
-
-/* Sort Controls */
-.sort-controls {
+.inv-sort-controls {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
-.sort-label {
-  color: #888;
-  font-size: 12px;
+.inv-sort-label {
+  color: #fff;
+  font-size: 15px;
   margin-right: 4px;
+  margin-bottom: 3px;
 }
 
-.sort-btn {
-  padding: 6px 10px;
+.inv-sort-btn {
+  padding: 4px 10px;
   background: rgba(60, 60, 100, 0.6);
   border: 1px solid #4a4a6a;
   border-radius: 4px;
-  color: #aaa;
-  font-size: 11px;
+  color: #fff;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.sort-btn:hover {
+.inv-sort-btn:hover {
   background: rgba(80, 80, 120, 0.8);
   color: #fff;
 }
 
-.sort-btn.active {
+.inv-sort-btn.active {
   background: rgba(0, 100, 200, 0.5);
   border-color: #0088ff;
   color: #fff;
+}
+
+.inv-loading-text,
+.inv-no-items {
+  color: #666;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.inv-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  padding: 4px;
+  /* Let the grid expand inside the section but scroll when needed */
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+/* Item Card */
+.inv-item-card {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  text-align: center;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Rarity-based border colors for item cards */
+.inv-item-card[data-rarity="common"] { border-color: #aaaaaa; }
+.inv-item-card[data-rarity="uncommon"] { border-color: #00ff00; }
+.inv-item-card[data-rarity="rare"] { border-color: #0088ff; }
+.inv-item-card[data-rarity="epic"] { border-color: #aa00ff; }
+.inv-item-card[data-rarity="legendary"] { border-color: #ffaa00; }
+
+.inv-item-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.inv-item-card.equipped {
+  background: rgba(0, 80, 0, 0.4);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.inv-item-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin: 0 auto 8px auto;
+  display: block;
+}
+
+.inv-item-type-icon {
+  font-size: 24px;
+  margin-top: 30px;
+  margin-bottom: 8px;
+}
+
+.inv-item-rarity {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: auto;
+  margin-bottom: 3px;
+}
+
+/* Rarity-based text colors for rarity label */
+.inv-item-rarity[data-rarity="common"] { color: #aaaaaa; }
+.inv-item-rarity[data-rarity="uncommon"] { color: #00ff00; }
+.inv-item-rarity[data-rarity="rare"] { color: #0088ff; }
+.inv-item-rarity[data-rarity="epic"] { color: #aa00ff; }
+.inv-item-rarity[data-rarity="legendary"] { color: #ffaa00; }
+
+.inv-item-name {
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.inv-item-stats {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.inv-equipped-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #00aa00;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 6px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Scrollbar styling */
+.inv-items-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.inv-items-grid::-webkit-scrollbar-track {
+  background: #1a1a2e;
+  border-radius: 4px;
+}
+
+.inv-items-grid::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.inv-items-grid::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

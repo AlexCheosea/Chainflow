@@ -1,9 +1,10 @@
-import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
+import { ConnectButton, useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit';
 import './WalletConnect.css';
 
 export function WalletConnect() {
   const account = useCurrentAccount();
   const isConnected = !!account;
+  const { mutate: disconnectWallet } = useDisconnectWallet();
 
   return (
     <div className="wallet-connect">
@@ -18,9 +19,19 @@ export function WalletConnect() {
           <span>Not connected</span>
         )}
       </div>
-      <ConnectButton>
-        {isConnected ? 'DISCONNECT' : 'CONNECT'}
-      </ConnectButton>
+      {isConnected ? (
+        <button
+          className="wallet-disconnect-btn"
+          onClick={() => disconnectWallet()}
+        >
+          Disconnect
+        </button>
+      ) : (
+        <ConnectButton className="wallet-connect-btn">CONNECT</ConnectButton>
+      )}
+      {!isConnected && (
+        <p className="connect-hint">Connect wallet to access inventory and marketplace</p>
+      )}
     </div>
   );
 }
