@@ -268,8 +268,8 @@
 }
 
 .inv-item-image {
-  width: 55px;
-  height: 55px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
   margin: 0 auto 8px auto;
   display: block;
@@ -283,8 +283,8 @@
 .inv-item-rarity {
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
 }
 
 /* Rarity-based text colors for rarity label */
@@ -297,7 +297,7 @@
 .inv-item-name {
   color: #fff;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 8px;
   line-height: 1.3;
 }
