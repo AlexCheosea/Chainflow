@@ -12,7 +12,8 @@ export function MainMenu() {
   const { 
     setGameStarted, 
     equipmentBonusAttack, 
-    equipmentBonusDefense 
+    equipmentBonusDefense,
+    gameStarted,
   } = useGameContext();
   
   const [showInventory, setShowInventory] = useState(false);
@@ -33,8 +34,8 @@ export function MainMenu() {
         <h1 className="game-title">⚔️ ChainFlow Roguelike</h1>
         <p className="game-subtitle">NFT Loot on Sui Blockchain</p>
         
-        {/* Show wallet only on the main menu itself, not when Inventory/Marketplace are open */}
-        {!showInventory && !showMarketplace && (
+        {/* Show wallet only on the main menu itself, not when Inventory/Marketplace are open or while the game is running */}
+        {!showInventory && !showMarketplace && !gameStarted && (
           <div className="wallet-section">
             <WalletConnect />
           </div>

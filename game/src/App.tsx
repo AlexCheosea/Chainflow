@@ -134,7 +134,7 @@ function GameApp() {
           <button className="menu-btn-small" onClick={() => setGameStarted(false)}>
             Menu
           </button>
-          <WalletConnect />
+          {!gameStarted && <WalletConnect />}
         </div>
       </header>
 
