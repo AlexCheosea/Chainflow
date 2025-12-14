@@ -186,21 +186,32 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     
     setTransactionStatus('pending');
     setStatusMessage(`Buying ${listing.name}...`);
-    
+
     try {
       const tx = createBuyTransaction(listing.itemId, listing.price);
       const result = await signAndExecute({ transaction: tx });
-      
-      // Log full result for debugging
+
+      // Improved logging for debugging
       console.log('Transaction result:', JSON.stringify(result, null, 2));
-      
-      // Check if transaction was successful
-      const effects = result.effects as { status?: { status?: string; error?: string } } | undefined;
-      if (effects?.status?.status !== 'success') {
-        const errorMsg = effects?.status?.error || '';
+
+      // Robust status check for Sui: if effects is a string (base64) and digest exists, treat as success
+      let isSuccess = false;
+      let errorMsg = '';
+      if (result) {
+        if (typeof result.effects === 'string' && result.digest && !result.error) {
+          isSuccess = true;
+        } else if (result.effects && typeof result.effects.status === 'object' && typeof result.effects.status.status === 'string') {
+          isSuccess = result.effects.status.status.toLowerCase() === 'success';
+          errorMsg = result.effects.status.error || '';
+        } else if (result.error) {
+          errorMsg = result.error;
+        }
+      }
+      if (!isSuccess) {
+        errorMsg = errorMsg || (result.effects?.status?.error || result.effects?.error || result.error || '');
         console.error('Transaction failed with error:', errorMsg);
         setTransactionStatus('error');
-        
+
         // Check for various insufficient funds error patterns
         const lowerError = errorMsg.toLowerCase();
         if (lowerError.includes('insufficient') || 
@@ -216,7 +227,7 @@ export function Marketplace({ onBack }: MarketplaceProps) {
         }
         return;
       }
-      
+
       setTransactionStatus('success');
       setStatusMessage('Item purchased successfully!');
       await refreshInventory();
@@ -269,17 +280,28 @@ export function Marketplace({ onBack }: MarketplaceProps) {
     try {
       const tx = await createBuyPremadeTransaction(item.rarity, item.itemType);
       const result = await signAndExecute({ transaction: tx });
-      
-      // Log full result for debugging
+
+      // Improved logging for debugging
       console.log('Transaction result:', JSON.stringify(result, null, 2));
-      
-      // Check if transaction was successful
-      const effects = result.effects as { status?: { status?: string; error?: string } } | undefined;
-      if (effects?.status?.status !== 'success') {
-        const errorMsg = effects?.status?.error || '';
+
+      // Robust status check for Sui: if effects is a string (base64) and digest exists, treat as success
+      let isSuccess = false;
+      let errorMsg = '';
+      if (result) {
+        if (typeof result.effects === 'string' && result.digest && !result.error) {
+          isSuccess = true;
+        } else if (result.effects && typeof result.effects.status === 'object' && typeof result.effects.status.status === 'string') {
+          isSuccess = result.effects.status.status.toLowerCase() === 'success';
+          errorMsg = result.effects.status.error || '';
+        } else if (result.error) {
+          errorMsg = result.error;
+        }
+      }
+      if (!isSuccess) {
+        errorMsg = errorMsg || (result.effects?.status?.error || result.effects?.error || result.error || '');
         console.error('Transaction failed with error:', errorMsg);
         setTransactionStatus('error');
-        
+
         // Check for various insufficient funds error patterns
         const lowerError = errorMsg.toLowerCase();
         if (lowerError.includes('insufficient') || 
@@ -295,7 +317,7 @@ export function Marketplace({ onBack }: MarketplaceProps) {
         }
         return;
       }
-      
+
       setTransactionStatus('success');
       setStatusMessage(`${item.name} purchased successfully!`);
       await refreshInventory();
