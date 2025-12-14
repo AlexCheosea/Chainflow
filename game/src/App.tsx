@@ -127,7 +127,7 @@ function GameApp() {
     <div className="app">
       <header className="header">
         <div className="header-left">
-          <h1 className="title">⚔️ ChainFlow Roguelike</h1>
+          <h1 className="title">⚔️ Sui Quest</h1>
           <span className="subtitle">Floor {currentFloor}</span>
         </div>
         <div className="header-right">

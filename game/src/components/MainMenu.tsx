@@ -33,7 +33,7 @@ export function MainMenu() {
       <div className="menu-content">
         {(!showInventory && !showMarketplace) && (
           <>
-            <h1 className="game-title">⚔️ ChainFlow Roguelike</h1>
+            <h1 className="game-title">⚔️ SuiQuest</h1>
             <p className="game-subtitle">NFT Loot on Sui Blockchain</p>
           </>
         )}
