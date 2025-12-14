@@ -33,9 +33,12 @@ export function MainMenu() {
         <h1 className="game-title">⚔️ ChainFlow Roguelike</h1>
         <p className="game-subtitle">NFT Loot on Sui Blockchain</p>
         
-        <div className="wallet-section">
-          <WalletConnect />
-        </div>
+        {/* Show wallet only on the main menu itself, not when Inventory/Marketplace are open */}
+        {!showInventory && !showMarketplace && (
+          <div className="wallet-section">
+            <WalletConnect />
+          </div>
+        )}
 
         {showMarketplace ? (
           <Marketplace onBack={() => setShowMarketplace(false)} />
