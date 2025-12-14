@@ -4,6 +4,11 @@
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  /* constrain marketplace area so expanding item lists don't push page content
+     Increase the reserved space to avoid clipping the page title/header. */
+  max-height: calc(100vh - 450px);
 }
 
 .mp-header {
@@ -102,6 +107,41 @@
   border-radius: 12px;
   padding: 24px;
   border: 1px solid #333;
+  /* let marketplace inner content scroll without resizing the page */
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+/* Subtle scrollbars that match the dark background */
+.mp-content {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
+}
+
+.mp-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.mp-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mp-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.02);
+}
+.mp-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Safety: apply same styling to the items grid if it scrolls on some layouts */
+.mp-market-tab .mp-items-grid::-webkit-scrollbar {
+  width: 10px;
+}
+.mp-market-tab .mp-items-grid::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.02);
 }
 
 .mp-section {
@@ -176,6 +216,12 @@
 
 .mp-shop-grid {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+/* Let the tab content control scrolling rather than each grid; prevents pushing header */
+.mp-market-tab .mp-items-grid {
+  max-height: none;
+  overflow: visible;
 }
 
 /* Item Card */
