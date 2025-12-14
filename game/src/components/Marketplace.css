@@ -188,8 +188,8 @@
 .mp-items-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 24px 12px;
-  margin-top: 30px;
+  gap: 5px 5px;
+  margin-top: 0px;
 }
 
 .mp-shop-grid {
