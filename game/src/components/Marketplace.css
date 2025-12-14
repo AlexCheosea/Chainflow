@@ -1,31 +1,27 @@
 /* Marketplace Component Styles */
 
-.marketplace {
+.mp-container {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.marketplace-header {
+.mp-header {
   display: flex;
   align-items: center;
   gap: 24px;
   margin-bottom: 24px;
 }
 
-.marketplace-header h2 {
+.mp-header h2 {
   color: #00aaff;
   font-size: 28px;
   margin: 0;
   font-family: monospace;
-}
-
-/* Nudge the cart icon and 'Marketplace' text slightly upward for visibility */
-.marketplace-header h2 {
   transform: translateY(-10px);
 }
 
-.back-btn {
+.mp-back-btn {
   padding: 10px 20px;
   background: rgba(60, 60, 100, 0.6);
   border: 1px solid #4a4a6a;
@@ -36,13 +32,13 @@
   transition: all 0.2s;
 }
 
-.back-btn:hover {
+.mp-back-btn:hover {
   background: rgba(80, 80, 120, 0.8);
   border-color: #6a6a8a;
 }
 
 /* Status Message */
-.status-message {
+.mp-status-message {
   padding: 12px 20px;
   border-radius: 8px;
   text-align: center;
@@ -50,26 +46,26 @@
   font-family: monospace;
 }
 
-.status-message.pending {
+.mp-status-message.pending {
   background: rgba(0, 100, 200, 0.3);
   border: 1px solid #0088ff;
   color: #88ccff;
 }
 
-.status-message.success {
+.mp-status-message.success {
   background: rgba(0, 200, 100, 0.3);
   border: 1px solid #00ff88;
   color: #88ffcc;
 }
 
-.status-message.error {
+.mp-status-message.error {
   background: rgba(200, 50, 50, 0.3);
   border: 1px solid #ff4444;
   color: #ff8888;
 }
 
 /* Tabs */
-.marketplace-tabs {
+.mp-tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
@@ -77,7 +73,7 @@
   padding-bottom: 8px;
 }
 
-.tab-btn {
+.mp-tab-btn {
   padding: 12px 24px;
   background: rgba(40, 40, 60, 0.6);
   border: 1px solid #3a3a5a;
@@ -89,43 +85,81 @@
   transition: all 0.2s;
 }
 
-.tab-btn:hover {
+.mp-tab-btn:hover {
   background: rgba(60, 60, 80, 0.8);
   color: #fff;
 }
 
-.tab-btn.active {
+.mp-tab-btn.active {
   background: rgba(0, 100, 200, 0.4);
   border-color: #0088ff;
   color: #fff;
 }
 
 /* Content area */
-.marketplace-content {
+.mp-content {
   background: rgba(20, 20, 40, 0.5);
   border-radius: 12px;
   padding: 24px;
   border: 1px solid #333;
 }
 
-.section {
+.mp-section {
   margin-bottom: 32px;
 }
 
-.section:last-child {
+.mp-section:last-child {
   margin-bottom: 0;
 }
 
-.section h3 {
+.mp-section h3 {
   color: #00aaff;
   font-size: 18px;
   margin: 0 0 16px 0;
   font-family: monospace;
 }
 
+/* Sort Controls */
+.mp-sort-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.mp-sort-label {
+  color: #fff;
+  font-size: 15px;
+  margin-right: 4px;
+  margin-bottom: 3px;
+}
+
+.mp-sort-btn {
+  padding: 4px 10px;
+  background: rgba(60, 60, 100, 0.6);
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mp-sort-btn:hover {
+  background: rgba(80, 80, 120, 0.8);
+  color: #fff;
+}
+
+.mp-sort-btn.active {
+  background: rgba(0, 100, 200, 0.5);
+  border-color: #0088ff;
+  color: #fff;
+}
+
 /* Descriptions */
-.shop-description,
-.market-description {
+.mp-shop-description,
+.mp-market-description {
   color: #888;
   font-size: 14px;
   margin-bottom: 20px;
@@ -134,18 +168,18 @@
 }
 
 /* Items Grid */
-.items-grid {
+.mp-items-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 24px 12px; /* vertical horizontal */
+  gap: 24px 12px;
 }
 
-.shop-grid {
+.mp-shop-grid {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 /* Item Card */
-.item-card {
+.mp-item-card {
   background: rgba(0, 0, 0, 0.4);
   border: 2px solid;
   border-radius: 12px;
@@ -159,25 +193,29 @@
   min-height: 280px;
 }
 
-.item-card.shop-item {
+/* Rarity-based border colors for item cards */
+.mp-item-card[data-rarity="common"] { border-color: #aaaaaa; }
+.mp-item-card[data-rarity="uncommon"] { border-color: #00ff00; }
+.mp-item-card[data-rarity="rare"] { border-color: #0088ff; }
+.mp-item-card[data-rarity="epic"] { border-color: #aa00ff; }
+.mp-item-card[data-rarity="legendary"] { border-color: #ffaa00; }
+
+.mp-item-card.shop-item {
   min-height: 320px;
+  background: linear-gradient(135deg, rgba(0, 50, 100, 0.4) 0%, rgba(0, 30, 60, 0.4) 100%);
 }
 
-.item-card:hover {
+.mp-item-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.item-card.listed {
+.mp-item-card.listed {
   background: rgba(50, 50, 0, 0.3);
 }
 
-.item-card.shop-item {
-  background: linear-gradient(135deg, rgba(0, 50, 100, 0.4) 0%, rgba(0, 30, 60, 0.4) 100%);
-}
-
 /* Shop badge */
-.shop-badge {
+.mp-shop-badge {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -190,9 +228,8 @@
   font-family: monospace;
 }
 
-
 /* Listed price label */
-.listed-price-label {
+.mp-listed-price-label {
   font-size: 16px;
   font-weight: bold;
   color: #ffcc00;
@@ -205,13 +242,13 @@
 }
 
 /* Item type icon */
-.item-type-icon {
+.mp-item-type-icon {
   font-size: 32px;
   margin-bottom: 8px;
 }
 
 /* Rarity */
-.item-rarity {
+.mp-item-rarity {
   font-size: 11px;
   font-weight: bold;
   margin-bottom: 4px;
@@ -219,8 +256,15 @@
   letter-spacing: 1px;
 }
 
+/* Rarity-based text colors for rarity label */
+.mp-item-rarity[data-rarity="common"] { color: #aaaaaa; }
+.mp-item-rarity[data-rarity="uncommon"] { color: #00ff00; }
+.mp-item-rarity[data-rarity="rare"] { color: #0088ff; }
+.mp-item-rarity[data-rarity="epic"] { color: #aa00ff; }
+.mp-item-rarity[data-rarity="legendary"] { color: #ffaa00; }
+
 /* Item name */
-.item-name {
+.mp-item-name {
   color: #fff;
   font-size: 14px;
   font-weight: bold;
@@ -229,7 +273,7 @@
 }
 
 /* Stats */
-.item-stats {
+.mp-item-stats {
   display: flex;
   justify-content: center;
   gap: 16px;
@@ -239,7 +283,7 @@
 }
 
 /* Description */
-.item-description {
+.mp-item-description {
   color: #666;
   font-size: 11px;
   margin-bottom: 12px;
@@ -252,32 +296,32 @@
   -webkit-box-orient: vertical;
 }
 
-/* Card footer - pushes price and button to bottom together */
-.card-footer {
+/* Card footer */
+.mp-card-footer {
   margin-top: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.card-footer .shop-price {
+.mp-card-footer .mp-shop-price {
   margin-bottom: 8px;
 }
 
-.card-footer .buy-btn {
+.mp-card-footer .mp-buy-btn {
   width: 100%;
 }
 
 /* Fallback for cards without footer wrapper */
-.item-card .buy-btn,
-.item-card .sell-btn,
-.item-card .delist-btn {
+.mp-item-card .mp-buy-btn,
+.mp-item-card .mp-sell-btn,
+.mp-item-card .mp-delist-btn {
   margin-top: auto;
 }
 
 /* Prices */
-.item-price,
-.shop-price {
+.mp-item-price,
+.mp-shop-price {
   font-size: 18px;
   font-weight: bold;
   color: #ffcc00;
@@ -285,21 +329,21 @@
   font-family: monospace;
 }
 
-.shop-price {
+.mp-shop-price {
   color: #00aaff;
 }
 
-.price-info {
+.mp-price-info {
   margin-bottom: 8px;
 }
 
-.fee-info {
+.mp-fee-info {
   font-size: 11px;
   color: #666;
 }
 
 /* Seller info */
-.seller-info {
+.mp-seller-info {
   font-size: 11px;
   color: #666;
   margin-bottom: 12px;
@@ -307,9 +351,9 @@
 }
 
 /* Buttons */
-.buy-btn,
-.sell-btn,
-.delist-btn {
+.mp-buy-btn,
+.mp-sell-btn,
+.mp-delist-btn {
   width: 100%;
   padding: 10px 16px;
   border-radius: 6px;
@@ -320,62 +364,62 @@
   font-family: monospace;
 }
 
-.buy-btn {
+.mp-buy-btn {
   background: linear-gradient(135deg, #00aa44 0%, #008833 100%);
   border: 1px solid #00cc55;
   color: #fff;
 }
 
-.buy-btn:hover:not(:disabled) {
+.mp-buy-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #00cc55 0%, #00aa44 100%);
   transform: scale(1.02);
 }
 
-.buy-btn:disabled {
+.mp-buy-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.sell-btn {
+.mp-sell-btn {
   background: linear-gradient(135deg, #0066cc 0%, #0055aa 100%);
   border: 1px solid #0088ff;
   color: #fff;
   flex: 1;
 }
 
-.sell-btn:hover:not(:disabled) {
+.mp-sell-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #0088ff 0%, #0066cc 100%);
 }
 
-.sell-btn:disabled {
+.mp-sell-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.delist-btn {
+.mp-delist-btn {
   background: linear-gradient(135deg, #aa4400 0%, #883300 100%);
   border: 1px solid #cc5500;
   color: #fff;
 }
 
-.delist-btn:hover:not(:disabled) {
+.mp-delist-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #cc5500 0%, #aa4400 100%);
 }
 
-.delist-btn:disabled {
+.mp-delist-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Sell controls */
-.sell-controls {
+.mp-sell-controls {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: auto;
 }
 
-.sell-controls input {
+.mp-sell-controls input {
   width: 100%;
   padding: 8px 12px;
   background: rgba(0, 0, 0, 0.4);
@@ -388,24 +432,24 @@
   -moz-appearance: textfield;
 }
 
-.sell-controls input::-webkit-outer-spin-button,
-.sell-controls input::-webkit-inner-spin-button {
+.mp-sell-controls input::-webkit-outer-spin-button,
+.mp-sell-controls input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.sell-controls input:focus {
+.mp-sell-controls input:focus {
   outline: none;
   border-color: #0088ff;
 }
 
-.sell-controls input::placeholder {
+.mp-sell-controls input::placeholder {
   color: #666;
 }
 
 /* No items / Loading */
-.no-items,
-.loading-text {
+.mp-no-items,
+.mp-loading-text {
   color: #666;
   text-align: center;
   padding: 40px 20px;
@@ -414,27 +458,27 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .marketplace {
+  .mp-container {
     padding: 16px;
   }
   
-  .marketplace-header {
+  .mp-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
   
-  .marketplace-tabs {
+  .mp-tabs {
     flex-wrap: wrap;
   }
   
-  .tab-btn {
+  .mp-tab-btn {
     flex: 1;
     min-width: 120px;
     text-align: center;
   }
   
-  .items-grid {
+  .mp-items-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 }

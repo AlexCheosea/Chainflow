@@ -166,7 +166,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, _delta: number): void {
     // Handle player movement
     const velocity = { x: 0, y: 0 };
     const speed = 150;

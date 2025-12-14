@@ -1,15 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useCurrentAccount } from '@mysten/dapp-kit';
-import { fetchOwnedItems, type OwnedItem } from '../services/itemMinting';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useGameContext, getItemSlotType } from '../context/GameContext';
+import type { OwnedItem } from '../services/itemMinting';
 import './Inventory.css';
-
-const RARITY_COLORS: Record<string, string> = {
-  common: '#aaaaaa',
-  uncommon: '#00ff00',
-  rare: '#0088ff',
-  epic: '#aa00ff',
-  legendary: '#ffaa00',
-};
 
 const RARITY_ORDER: Record<string, number> = {
   common: 1,
@@ -21,15 +13,88 @@ const RARITY_ORDER: Record<string, number> = {
 
 type SortOption = 'attack' | 'defense' | 'rarity';
 
-export function Inventory() {
-  const account = useCurrentAccount();
-  const [items, setItems] = useState<OwnedItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+interface InventoryProps {
+  onBack: () => void;
+}
+
+// Convert blob to PNG data URL
+const blobToPngDataUrl = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const blobUrl = URL.createObjectURL(blob);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(blobUrl);
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(blobUrl);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(blobUrl);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = blobUrl;
+  });
+};
+
+// Fetch image from Walrus URL
+const fetchItemImage = async (imageUrl: string): Promise<string | null> => {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    // Walrus may return octet-stream; coerce to PNG via canvas
+    return await blobToPngDataUrl(blob);
+  } catch {
+    return null;
+  }
+};
+
+export function Inventory({ onBack }: InventoryProps) {
+  const { 
+    ownedItems, 
+    loadingItems, 
+    equipment, 
+    equipItem, 
+    unequipItem, 
+    equipmentBonusAttack, 
+    equipmentBonusDefense 
+  } = useGameContext();
+  
   const [sortBy, setSortBy] = useState<SortOption>('rarity');
+  const [itemImages, setItemImages] = useState<Record<string, string>>({});
+
+  // Fetch images for all items
+  const loadItemImages = useCallback(async () => {
+    const images: Record<string, string> = {};
+    await Promise.all(
+      ownedItems.map(async (item) => {
+        if (item.imageUrl) {
+          const dataUrl = await fetchItemImage(item.imageUrl);
+          if (dataUrl) {
+            images[item.id] = dataUrl;
+          }
+        }
+      })
+    );
+    setItemImages(images);
+  }, [ownedItems]);
+
+  useEffect(() => {
+    if (ownedItems.length > 0) {
+      loadItemImages();
+    }
+  }, [ownedItems, loadItemImages]);
 
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
+    return [...ownedItems].sort((a, b) => {
       switch (sortBy) {
         case 'attack':
           return b.attack - a.attack;
@@ -41,102 +106,165 @@ export function Inventory() {
           return 0;
       }
     });
-  }, [items, sortBy]);
+  }, [ownedItems, sortBy]);
 
-  const loadItems = useCallback(async () => {
-    if (!account?.address) return;
-    
-    setLoading(true);
-    try {
-      const ownedItems = await fetchOwnedItems(account.address);
-      setItems(ownedItems);
-    } catch (error) {
-      console.error('Failed to load items:', error);
-    } finally {
-      setLoading(false);
+  const isEquipped = (item: OwnedItem) => 
+    equipment.weapon?.id === item.id || equipment.armor?.id === item.id;
+
+  const handleItemClick = (item: OwnedItem) => {
+    if (isEquipped(item)) {
+      unequipItem(getItemSlotType(item));
+    } else {
+      equipItem(item);
     }
-  }, [account?.address]);
-
-  useEffect(() => {
-    if (account?.address && isOpen) {
-      loadItems();
-    }
-  }, [account?.address, isOpen, loadItems]);
-
-  if (!account) {
-    return null;
-  }
+  };
 
   return (
-    <div className="inventory-container">
-      <button 
-        className="inventory-toggle"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        📦 Inventory ({items.length})
+    <div className="inv-view">
+      <button className="inv-back-btn" onClick={onBack}>
+        ← Back to Menu
       </button>
       
-      {isOpen && (
-        <div className="inventory-panel">
-          <div className="inventory-header">
-            <h3>Your NFT Items</h3>
-            <button onClick={loadItems} disabled={loading}>
-              {loading ? '...' : '🔄'}
-            </button>
+      <div className="inv-equipment-slots">
+        <h3>⚙️ Equipment</h3>
+        <div className="inv-slots">
+          <div className="inv-slot inv-weapon-slot">
+            <span className="inv-slot-label">⚔️ Weapon</span>
+            {equipment.weapon ? (
+              <div 
+                className="inv-equipped-item" 
+                data-rarity={equipment.weapon.rarity}
+              >
+                <div className="inv-equipped-info">
+                  <span 
+                    className="inv-equipped-name"
+                    data-rarity={equipment.weapon.rarity}
+                  >
+                    {equipment.weapon.name}
+                  </span>
+                  <span className="inv-equipped-stats">
+                    ⚔️ +{equipment.weapon.attack}
+                  </span>
+                </div>
+                <button 
+                  className="inv-unequip-btn"
+                  onClick={() => unequipItem('weapon')}
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <span className="inv-empty-slot">Empty</span>
+            )}
           </div>
+          
+          <div className="inv-slot inv-armor-slot">
+            <span className="inv-slot-label">🛡️ Armor</span>
+            {equipment.armor ? (
+              <div 
+                className="inv-equipped-item" 
+                data-rarity={equipment.armor.rarity}
+              >
+                <div className="inv-equipped-info">
+                  <span 
+                    className="inv-equipped-name"
+                    data-rarity={equipment.armor.rarity}
+                  >
+                    {equipment.armor.name}
+                  </span>
+                  <span className="inv-equipped-stats">
+                    🛡️ +{equipment.armor.defense}
+                  </span>
+                </div>
+                <button 
+                  className="inv-unequip-btn"
+                  onClick={() => unequipItem('armor')}
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <span className="inv-empty-slot">Empty</span>
+            )}
+          </div>
+        </div>
+        
+        <div className="inv-total-stats">
+          <span className="inv-stat-label">Equipment Bonus:</span>
+          <span className="inv-stat-value">⚔️ +{equipmentBonusAttack}</span>
+          <span className="inv-stat-value">🛡️ +{equipmentBonusDefense}</span>
+        </div>
+      </div>
 
-          <div className="sort-controls">
-            <span className="sort-label">Sort by:</span>
+      <div className="inv-section">
+        <div className="inv-header">
+          <h3>📦 Your NFT Items</h3>
+          <div className="inv-sort-controls">
+            <span className="inv-sort-label">Sort by:</span>
             <button 
-              className={`sort-btn ${sortBy === 'attack' ? 'active' : ''}`}
+              className={`inv-sort-btn ${sortBy === 'attack' ? 'active' : ''}`}
               onClick={() => setSortBy('attack')}
             >
               ⚔️ Attack
             </button>
             <button 
-              className={`sort-btn ${sortBy === 'defense' ? 'active' : ''}`}
+              className={`inv-sort-btn ${sortBy === 'defense' ? 'active' : ''}`}
               onClick={() => setSortBy('defense')}
             >
               🛡️ Defense
             </button>
             <button 
-              className={`sort-btn ${sortBy === 'rarity' ? 'active' : ''}`}
+              className={`inv-sort-btn ${sortBy === 'rarity' ? 'active' : ''}`}
               onClick={() => setSortBy('rarity')}
             >
               ✨ Rarity
             </button>
           </div>
-          
-          {items.length === 0 ? (
-            <div className="inventory-empty">
-              <p>No items yet!</p>
-              <p className="hint">Defeat enemies to collect NFT loot</p>
-            </div>
-          ) : (
-            <div className="inventory-grid">
-              {sortedItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="inventory-item"
-                  style={{ borderColor: RARITY_COLORS[item.rarity] }}
-                >
-                  <div 
-                    className="item-rarity"
-                    style={{ color: RARITY_COLORS[item.rarity] }}
-                  >
-                    {item.rarity.toUpperCase()}
-                  </div>
-                  <div className="item-name">{item.name}</div>
-                  <div className="item-stats">
-                    <span className="attack">⚔️ {item.attack}</span>
-                    <span className="defense">🛡️ {item.defense}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
-      )}
+        
+        {loadingItems ? (
+          <p className="inv-loading-text">Loading items...</p>
+        ) : ownedItems.length === 0 ? (
+          <p className="inv-no-items">No items yet. Play to collect NFT loot!</p>
+        ) : (
+          <div className="inv-items-grid">
+            {sortedItems.map(item => (
+              <div 
+                key={item.id} 
+                className={`inv-item-card ${isEquipped(item) ? 'equipped' : ''}`}
+                data-rarity={item.rarity}
+                onClick={() => handleItemClick(item)}
+              >
+                {itemImages[item.id] ? (
+                  <img 
+                    src={itemImages[item.id]} 
+                    alt={item.name} 
+                    className="inv-item-image" 
+                  />
+                ) : (
+                  <div className="inv-item-type-icon">
+                    {getItemSlotType(item) === 'weapon' ? '⚔️' : '🛡️'}
+                  </div>
+                )}
+                <div 
+                  className="inv-item-rarity"
+                  data-rarity={item.rarity}
+                >
+                  {item.rarity.toUpperCase()}
+                </div>
+                <div className="inv-item-name">{item.name}</div>
+                <div className="inv-item-stats">
+                  <span>⚔️ {item.attack}</span>
+                  <span>🛡️ {item.defense}</span>
+                </div>
+                {isEquipped(item) && (
+                  <div className="inv-equipped-badge">EQUIPPED</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

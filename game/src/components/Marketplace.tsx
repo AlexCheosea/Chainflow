@@ -17,15 +17,6 @@ import {
 import { type OwnedItem } from '../services/itemMinting';
 import './Marketplace.css';
 
-// Rarity colors matching the game
-const RARITY_COLORS: Record<string, string> = {
-  common: '#aaaaaa',
-  uncommon: '#00ff00',
-  rare: '#0088ff',
-  epic: '#aa00ff',
-  legendary: '#ffaa00',
-};
-
 const RARITY_ORDER: Record<string, number> = {
   common: 1,
   uncommon: 2,
@@ -336,9 +327,9 @@ export function Marketplace({ onBack }: MarketplaceProps) {
   }, [transactionStatus]);
 
   return (
-    <div className="marketplace">
-      <div className="marketplace-header">
-        <button className="back-btn" onClick={onBack}>
+    <div className="mp-container">
+      <div className="mp-header">
+        <button className="mp-back-btn" onClick={onBack}>
           ← Back to Menu
         </button>
         <h2>🛒 Marketplace</h2>
@@ -346,27 +337,27 @@ export function Marketplace({ onBack }: MarketplaceProps) {
 
       {/* Status message */}
       {statusMessage && (
-        <div className={`status-message ${transactionStatus}`}>
+        <div className={`mp-status-message ${transactionStatus}`}>
           {statusMessage}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="marketplace-tabs">
+      <div className="mp-tabs">
         <button
-          className={`tab-btn ${activeTab === 'my-listings' ? 'active' : ''}`}
+          className={`mp-tab-btn ${activeTab === 'my-listings' ? 'active' : ''}`}
           onClick={() => setActiveTab('my-listings')}
         >
           📦 My Items
         </button>
         <button
-          className={`tab-btn ${activeTab === 'shop' ? 'active' : ''}`}
+          className={`mp-tab-btn ${activeTab === 'shop' ? 'active' : ''}`}
           onClick={() => setActiveTab('shop')}
         >
           🏪 Dev Shop
         </button>
         <button
-          className={`tab-btn ${activeTab === 'market' ? 'active' : ''}`}
+          className={`mp-tab-btn ${activeTab === 'market' ? 'active' : ''}`}
           onClick={() => setActiveTab('market')}
         >
           🌐 Player Market
@@ -374,34 +365,34 @@ export function Marketplace({ onBack }: MarketplaceProps) {
       </div>
 
       {/* Tab content */}
-      <div className="marketplace-content">
+      <div className="mp-content">
         {/* My Listings Tab */}
         {activeTab === 'my-listings' && (
-          <div className="my-listings-tab">
-            <div className="section">
+          <div className="mp-my-listings-tab">
+            <div className="mp-section">
               <h3>Your Items</h3>
-                <div className="sort-controls">
-                  <span className="sort-label">Sort by:</span>
+                <div className="mp-sort-controls">
+                  <span className="mp-sort-label">Sort by:</span>
                   <button 
-                    className={`sort-btn ${mySortBy === 'attack' ? 'active' : ''}`}
+                    className={`mp-sort-btn ${mySortBy === 'attack' ? 'active' : ''}`}
                     onClick={() => setMySortBy('attack')}
                   >
                     ⚔️ Attack
                   </button>
                   <button 
-                    className={`sort-btn ${mySortBy === 'defense' ? 'active' : ''}`}
+                    className={`mp-sort-btn ${mySortBy === 'defense' ? 'active' : ''}`}
                     onClick={() => setMySortBy('defense')}
                   >
                     🛡️ Defense
                   </button>
                   <button 
-                    className={`sort-btn ${mySortBy === 'rarity' ? 'active' : ''}`}
+                    className={`mp-sort-btn ${mySortBy === 'rarity' ? 'active' : ''}`}
                     onClick={() => setMySortBy('rarity')}
                   >
                     ✨ Rarity
                   </button>
                   <button
-                    className={`sort-btn ${showListed ? 'active' : ''}`}
+                    className={`mp-sort-btn ${showListed ? 'active' : ''}`}
                     onClick={() => setShowListed(s => !s)}
                     title={showListed ? 'Hide listed items' : 'Show listed items'}
                   >
@@ -410,28 +401,28 @@ export function Marketplace({ onBack }: MarketplaceProps) {
                 </div>
 
                 {myListings.length === 0 && unlistedItems.length === 0 ? (
-                <p className="no-items">No items yet. Play the game to collect loot!</p>
+                <p className="mp-no-items">No items yet. Play the game to collect loot!</p>
               ) : (
-                <div className="items-grid">
+                <div className="mp-items-grid">
                     {/* Listed items */}
                     {showListed && sortedMyListings.map((listing: MarketplaceListing) => (
                     <div
                       key={listing.itemId}
-                      className="item-card listed"
-                      style={{ borderColor: RARITY_COLORS[listing.rarity] }}
+                      className="mp-item-card listed"
+                      data-rarity={listing.rarity}
                     >
-                      <div className="item-rarity" style={{ color: RARITY_COLORS[listing.rarity] }}>
+                      <div className="mp-item-rarity" data-rarity={listing.rarity}>
                         {listing.rarity.toUpperCase()}
                       </div>
-                      <div className="item-name">{listing.name}</div>
-                      <div className="item-stats">
+                      <div className="mp-item-name">{listing.name}</div>
+                      <div className="mp-item-stats">
                         <span>⚔️ {listing.attack}</span>
                         <span>🛡️ {listing.defense}</span>
                       </div>
-                      <div className="sell-controls">
-                        <div className="listed-price-label">Listed for {formatPrice(listing.price)}</div>
+                      <div className="mp-sell-controls">
+                        <div className="mp-listed-price-label">Listed for {formatPrice(listing.price)}</div>
                         <button
-                          className="delist-btn"
+                          className="mp-delist-btn"
                           onClick={() => handleDelistItem(listing.itemId)}
                           disabled={transactionStatus === 'pending'}
                         >
@@ -445,18 +436,18 @@ export function Marketplace({ onBack }: MarketplaceProps) {
                   {sortedUnlistedItems.map((item: OwnedItem) => (
                     <div
                       key={item.id}
-                      className="item-card sellable"
-                      style={{ borderColor: RARITY_COLORS[item.rarity] }}
+                      className="mp-item-card sellable"
+                      data-rarity={item.rarity}
                     >
-                      <div className="item-rarity" style={{ color: RARITY_COLORS[item.rarity] }}>
+                      <div className="mp-item-rarity" data-rarity={item.rarity}>
                         {item.rarity.toUpperCase()}
                       </div>
-                      <div className="item-name">{item.name}</div>
-                      <div className="item-stats">
+                      <div className="mp-item-name">{item.name}</div>
+                      <div className="mp-item-stats">
                         <span>⚔️ {item.attack}</span>
                         <span>🛡️ {item.defense}</span>
                       </div>
-                      <div className="sell-controls">
+                      <div className="mp-sell-controls">
                         <input
                           type="number"
                           placeholder="Price (SUI)"
@@ -466,7 +457,7 @@ export function Marketplace({ onBack }: MarketplaceProps) {
                           onChange={(e) => setListingPrice(prev => ({ ...prev, [item.id]: e.target.value }))}
                         />
                         <button
-                          className="sell-btn"
+                          className="mp-sell-btn"
                           onClick={() => handleListItem(item.id)}
                           disabled={transactionStatus === 'pending' || !listingPrice[item.id]}
                         >
@@ -483,34 +474,34 @@ export function Marketplace({ onBack }: MarketplaceProps) {
 
         {/* Dev Shop Tab */}
         {activeTab === 'shop' && (
-          <div className="shop-tab">
-            <p className="shop-description">
+          <div className="mp-shop-tab">
+            <p className="mp-shop-description">
               Premium items with maximum stats! All proceeds go directly to the developers.
             </p>
-            <div className="items-grid shop-grid">
+            <div className="mp-items-grid mp-shop-grid">
               {premadeItems.map((item, index) => (
                 <div
                   key={`${item.rarity}-${item.itemType}-${index}`}
-                  className="item-card shop-item"
-                  style={{ borderColor: RARITY_COLORS[item.rarity] }}
+                  className="mp-item-card shop-item"
+                  data-rarity={item.rarity}
                 >
-                  <div className="shop-badge">SUI</div>
-                  <div className="item-type-icon">
+                  <div className="mp-shop-badge">SUI</div>
+                  <div className="mp-item-type-icon">
                     {item.itemType === 'weapon' ? '⚔️' : '🛡️'}
                   </div>
-                  <div className="item-rarity" style={{ color: RARITY_COLORS[item.rarity] }}>
+                  <div className="mp-item-rarity" data-rarity={item.rarity}>
                     {item.rarity.toUpperCase()}
                   </div>
-                  <div className="item-name">{item.name}</div>
-                  <div className="item-stats">
+                  <div className="mp-item-name">{item.name}</div>
+                  <div className="mp-item-stats">
                     <span>⚔️ {item.attack}</span>
                     <span>🛡️ {item.defense}</span>
                   </div>
-                  <div className="item-description">{item.description}</div>
-                  <div className="card-footer">
-                    <div className="shop-price">{formatPrice(item.price)}</div>
+                  <div className="mp-item-description">{item.description}</div>
+                  <div className="mp-card-footer">
+                    <div className="mp-shop-price">{formatPrice(item.price)}</div>
                     <button
-                      className="buy-btn"
+                      className="mp-buy-btn"
                       onClick={() => handleBuyPremade(item)}
                       disabled={transactionStatus === 'pending' || !account}
                     >
@@ -525,66 +516,66 @@ export function Marketplace({ onBack }: MarketplaceProps) {
 
         {/* Player Market Tab */}
         {activeTab === 'market' && (
-          <div className="market-tab">
-            <p className="market-description">
+          <div className="mp-market-tab">
+            <p className="mp-market-description">
               Browse items listed by other players. 2% fee on all purchases goes to developers.
             </p>
-            <div className="sort-controls">
-              <span className="sort-label">Sort by:</span>
+            <div className="mp-sort-controls">
+              <span className="mp-sort-label">Sort by:</span>
               <button 
-                className={`sort-btn ${marketSortBy === 'attack' ? 'active' : ''}`}
+                className={`mp-sort-btn ${marketSortBy === 'attack' ? 'active' : ''}`}
                 onClick={() => setMarketSortBy('attack')}
               >
                 ⚔️ Attack
               </button>
               <button 
-                className={`sort-btn ${marketSortBy === 'defense' ? 'active' : ''}`}
+                className={`mp-sort-btn ${marketSortBy === 'defense' ? 'active' : ''}`}
                 onClick={() => setMarketSortBy('defense')}
               >
                 🛡️ Defense
               </button>
               <button 
-                className={`sort-btn ${marketSortBy === 'rarity' ? 'active' : ''}`}
+                className={`mp-sort-btn ${marketSortBy === 'rarity' ? 'active' : ''}`}
                 onClick={() => setMarketSortBy('rarity')}
               >
                 ✨ Rarity
               </button>
               <button 
-                className={`sort-btn ${marketSortBy === 'price' ? 'active' : ''}`}
+                className={`mp-sort-btn ${marketSortBy === 'price' ? 'active' : ''}`}
                 onClick={() => setMarketSortBy('price')}
               >
                 💰 Price
               </button>
             </div>
             {loading ? (
-              <p className="loading-text">Loading listings...</p>
+              <p className="mp-loading-text">Loading listings...</p>
             ) : otherListings.length === 0 ? (
-              <p className="no-items">No items currently for sale. Check back later!</p>
+              <p className="mp-no-items">No items currently for sale. Check back later!</p>
             ) : (
-              <div className="items-grid">
+              <div className="mp-items-grid">
                 {sortedOtherListings.map((listing: MarketplaceListing) => (
                   <div
                     key={listing.itemId}
-                    className="item-card market-item"
-                    style={{ borderColor: RARITY_COLORS[listing.rarity] }}
+                    className="mp-item-card market-item"
+                    data-rarity={listing.rarity}
                   >
-                    <div className="item-rarity" style={{ color: RARITY_COLORS[listing.rarity] }}>
+                    <div className="mp-item-rarity" data-rarity={listing.rarity}>
                       {listing.rarity.toUpperCase()}
                     </div>
-                    <div className="item-name">{listing.name}</div>
-                    <div className="item-stats">
+                    <div className="mp-item-name">{listing.name}</div>
+                    <div className="mp-item-stats">
                       <span>⚔️ {listing.attack}</span>
                       <span>🛡️ {listing.defense}</span>
                     </div>
-                    <div className="price-info">
-                      <div className="item-price">{formatPriceRoundUp3(listing.price)}</div>
-                      <div className="fee-info">+{formatPriceRoundUp3(calculateFee(listing.price))} fee</div>
+                    <div className="mp-price-info">
+                      <div className="mp-item-price">{formatPriceRoundUp3(listing.price)}</div>
+                      <div className="mp-fee-info">+{formatPriceRoundUp3(calculateFee(listing.price))} fee</div>
                     </div>
-                    <div className="seller-info">
+                    <div className="mp-seller-info">
                       Seller: {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
                     </div>
                     <button
-                      className="buy-btn"
+                      className="mp-buy-btn"
                       onClick={() => handleBuyItem(listing)}
                       disabled={transactionStatus === 'pending' || !account}
                     >

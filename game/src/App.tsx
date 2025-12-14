@@ -23,7 +23,7 @@ const queryClient = new QueryClient();
 function GameApp() {
   const account = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
-  const { gameStarted, setGameStarted, equipmentBonusAttack, equipmentBonusDefense, refreshInventory } = useGameContext();
+  const { gameStarted, setGameStarted, refreshInventory } = useGameContext();
   
   // Floor transition state
   const [showFloorTransition, setShowFloorTransition] = useState(false);

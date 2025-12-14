@@ -11,7 +11,7 @@ export class UIScene extends Phaser.Scene {
     super({ key: 'UIScene' });
   }
 
-  create(data?: { floor?: number }): void {
+  create(_data?: { floor?: number }): void {
     // Health bar background
     this.add.rectangle(120, 40, 200, 20, 0x333333).setScrollFactor(0);
     
