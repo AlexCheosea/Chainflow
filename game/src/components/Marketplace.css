@@ -205,6 +205,17 @@
   background: linear-gradient(135deg, rgba(0, 50, 100, 0.4) 0%, rgba(0, 30, 60, 0.4) 100%);
 }
 
+/* Make Player Market item cards match Dev Shop */
+.mp-item-card.market-item {
+  min-height: 320px;
+  background: linear-gradient(135deg, rgba(0, 50, 100, 0.4) 0%, rgba(0, 30, 60, 0.4) 100%);
+}
+
+/* Ensure market item price color matches shop's price styling */
+.mp-item-card.market-item .mp-item-price {
+  color: #00aaff;
+}
+
 .mp-item-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
