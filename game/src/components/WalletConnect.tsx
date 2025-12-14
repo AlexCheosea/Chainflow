@@ -29,6 +29,9 @@ export function WalletConnect() {
       ) : (
         <ConnectButton>CONNECT</ConnectButton>
       )}
+      {!isConnected && (
+        <p className="connect-hint">Connect wallet to access inventory and marketplace</p>
+      )}
     </div>
   );
 }

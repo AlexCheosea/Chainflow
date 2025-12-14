@@ -66,9 +66,7 @@ export function MainMenu() {
             >
               🛒 Marketplace
             </button>
-            {!account && (
-              <p className="connect-hint">Connect wallet to access inventory and marketplace</p>
-            )}
+            
           </div>
         )}
 

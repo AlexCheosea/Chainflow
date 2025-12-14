@@ -6,6 +6,9 @@
   background: rgba(26, 26, 46, 0.9);
   border-radius: 8px;
   border: 1px solid #4a4a6a;
+  flex-wrap: wrap;
+  font-family: monospace;
+  font-size: 14px;
 }
 
 .wallet-info {
@@ -14,13 +17,29 @@
   gap: 8px;
 }
 
-.connected-info,
-.disconnected-info {
+/* Keep info and button on the same row when possible; hint flows to its own row */
+.wallet-connect > .wallet-info {
+  flex: 0 0 auto;
+}
+
+.wallet-connect > button {
+  flex: 0 0 auto;
+}
+
+.wallet-connect .connect-hint {
+  margin-left: 12px;
+  margin-top: 0;
+  color: #fff;
+  font-size: 14px;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+connected-info,
+disconnected-info {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: monospace;
-  font-size: 14px;
 }
 
 .status-dot {
@@ -40,6 +59,17 @@
 
 .address {
   color: #00ff00;
+}
+
+.wallet-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.address {
+  color: #00ff00;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .disconnected-info span {
