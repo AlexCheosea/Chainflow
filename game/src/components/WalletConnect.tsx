@@ -27,7 +27,7 @@ export function WalletConnect() {
           Disconnect
         </button>
       ) : (
-        <ConnectButton>CONNECT</ConnectButton>
+        <ConnectButton className="wallet-connect-btn">CONNECT</ConnectButton>
       )}
       {!isConnected && (
         <p className="connect-hint">Connect wallet to access inventory and marketplace</p>

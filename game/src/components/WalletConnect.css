@@ -22,7 +22,8 @@
   flex: 0 0 auto;
 }
 
-.wallet-connect > button {
+.wallet-connect > button,
+.wallet-connect-btn {
   flex: 0 0 auto;
 }
 
@@ -77,6 +78,7 @@ disconnected-info {
 }
 
 /* Ensure connect (trigger) and disconnect buttons match visually */
+.wallet-connect-btn,
 .wallet-connect > button,
 .wallet-disconnect-btn {
   padding: 10px 18px;
@@ -97,13 +99,14 @@ disconnected-info {
   white-space: nowrap;
   width: 160px; /* fixed width to fit both "Connect Wallet" and "Disconnect" */
 }
-
+.wallet-connect-btn:hover,
 .wallet-connect > button:hover,
 .wallet-disconnect-btn:hover {
   background: rgba(80, 80, 120, 0.95);
   transform: translateY(-1px);
 }
 
+.wallet-connect-btn:focus,
 .wallet-connect > button:focus,
 .wallet-disconnect-btn:focus {
   outline: 3px solid rgba(0,136,255,0.14);
