@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px;
+  padding: 30px 16px;
   background: rgba(26, 26, 46, 0.9);
   border-radius: 8px;
   border: 1px solid #4a4a6a;
@@ -44,4 +44,38 @@
 
 .disconnected-info span {
   color: #888;
+}
+
+/* Ensure connect (trigger) and disconnect buttons match visually */
+.wallet-connect > button,
+.wallet-disconnect-btn {
+  padding: 10px 18px;
+  background: rgba(60, 60, 100, 0.8);
+  border: 1px solid #4a4a6a;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: background 0.15s ease, transform 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+  width: 160px; /* fixed width to fit both "Connect Wallet" and "Disconnect" */
+}
+
+.wallet-connect > button:hover,
+.wallet-disconnect-btn:hover {
+  background: rgba(80, 80, 120, 0.95);
+  transform: translateY(-1px);
+}
+
+.wallet-connect > button:focus,
+.wallet-disconnect-btn:focus {
+  outline: 3px solid rgba(0,136,255,0.14);
+  outline-offset: 2px;
 }
