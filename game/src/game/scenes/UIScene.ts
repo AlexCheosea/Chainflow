@@ -27,12 +27,12 @@ export class UIScene extends Phaser.Scene {
       fontFamily: 'monospace',
     }).setOrigin(0.5).setScrollFactor(0);
 
-    // Attack/Defense stats
-    this.statsText = this.add.text(20, 60, '⚔️ 25  🛡️ 0', {
-      fontSize: '14px',
+    // Attack/Defense stats — centered under HP bar and larger
+    this.statsText = this.add.text(120, 64, '⚔️ 25  🛡️ 0', {
+      fontSize: '20px',
       color: '#ffcc00',
       fontFamily: 'monospace',
-    }).setScrollFactor(0);
+    }).setOrigin(0.5).setScrollFactor(0);
 
     // Gate notification (hidden initially) - centered at half of game width (1000/2 = 500)
     this.gateNotification = this.add.text(500, 550, '🌀 Gate opened! Find the portal to proceed!', {
@@ -61,7 +61,8 @@ export class UIScene extends Phaser.Scene {
   private updateHealthBar(health: number, maxHealth: number): void {
     this.healthBar.clear();
     const healthPercent = health / maxHealth;
-    this.healthBar.fillStyle(healthPercent > 0.3 ? 0x00ff00 : 0xff0000);
+    // Use a darker green for better contrast with the HP text
+    this.healthBar.fillStyle(healthPercent > 0.3 ? 0x007f00 : 0xff0000);
     const width = (health / maxHealth) * 196;
     this.healthBar.fillRect(22, 31, width, 18);
   }
