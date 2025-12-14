@@ -121,11 +121,10 @@ export function Inventory({ onBack }: InventoryProps) {
 
   return (
     <div className="inv-view">
-      <button className="inv-back-btn" onClick={onBack}>
-        ← Back to Menu
-      </button>
-      
       <div className="inv-equipment-slots">
+        <button className="inv-back-btn" onClick={onBack}>
+          ← Back to Menu
+        </button>
         <h3>⚙️ Equipment</h3>
         <div className="inv-slots">
           <div className="inv-slot inv-weapon-slot">
